@@ -51,6 +51,22 @@
     .metric .v { font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-weight: 700; display: block; margin-bottom: 2px; }
     .metric .l { font-size: 10px; color: var(--ink-soft); }
 
+    /* Stock-based success % chip (overall + per model) */
+    .stockpct-box { text-align: right; }
+    .stockpct-box .lbl { font-size: 10px; color: #CBD5E1; text-transform: uppercase; }
+    .stockpct-box .val { font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 700; color: #60A5FA; }
+    .model-card .stockpct-box .lbl { color: var(--ink-soft); }
+    .model-card .stockpct-box .val { color: var(--accent); font-size: 20px; }
+
+    /* ===== Desktop "one screen, no scroll" mode (Overview) ===== */
+    @media (min-width: 901px) {
+      body.desktop-fit { overflow: hidden; height: 100vh; }
+      #overviewContentOuter { overflow: hidden; }
+      #overviewContent { transform-origin: top center; max-width: 1400px; width: 96%; }
+      #overviewContent .models-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; align-items: start; }
+      #overviewContent .model-card { margin-bottom: 0; }
+    }
+
     .dash-stock { font-family: 'IBM Plex Mono', monospace; font-size: 26px; font-weight: 700; color: var(--accent); line-height: 1; }
     .progress-bg { height: 10px; background: var(--line); border-radius: 5px; margin-top: 8px; overflow: hidden; width: 100%; }
     .progress-fill { height: 100%; background: var(--accent); border-radius: 5px; transition: width 0.3s; }
@@ -385,6 +401,7 @@ let uiState = { paintTab: 'send', maintTab: 'todo', form: { model: MODELS[0], si
 window.route = function() {
   if (!getUserName()) { renderUserGate(); return; }
   const hash = window.location.hash;
+  if (hash !== '#overview') { document.body.classList.remove('desktop-fit'); }
   if (hash === '#paint') renderPaint();
   else if (hash === '#maintenance') renderMaint();
   else if (hash === '#overview') renderOverview();
@@ -424,10 +441,12 @@ function renderOverview() {
   let oldestGlobal = null, oldestGlobalKey = '';
 
   let modelsHtml = MODELS.map(m => {
+    let modelSent = 0, modelDone = 0, modelStock = 0;
     let sideHtml = SIDES.map(s => {
       let st = getConsolidatedStats(m, s);
       let inv = getInventory(m, s);
       allSent += st.sent; allDone += st.done; allStock += inv;
+      modelSent += st.sent; modelDone += st.done; modelStock += inv;
       if (st.oldestPendingAt && (!oldestGlobal || new Date(st.oldestPendingAt) < new Date(oldestGlobal))) {
         oldestGlobal = st.oldestPendingAt; oldestGlobalKey = `${m} ${s}`;
       }
@@ -455,10 +474,23 @@ function renderOverview() {
         </div>
       `;
     }).join('');
-    return `<div class="model-card"><div style="font-family: Oswald; font-size: 22px; font-weight: 700; color:var(--accent); margin-bottom: 16px; border-bottom:2px solid var(--accent); display:inline-block;">${m}</div>${sideHtml}</div>`;
+
+    let modelPctStock = modelStock > 0 ? Math.round((modelDone / modelStock) * 100) : 0;
+
+    return `<div class="model-card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 16px;">
+        <div style="font-family: Oswald; font-size: 22px; font-weight: 700; color:var(--accent); border-bottom:2px solid var(--accent); display:inline-block;">${m}</div>
+        <div class="stockpct-box">
+          <div class="lbl">% สำเร็จ (เทียบ Stock)</div>
+          <div class="val">${modelPctStock}%</div>
+        </div>
+      </div>
+      ${sideHtml}
+    </div>`;
   }).join('');
 
   let allPct = allSent > 0 ? Math.round((allDone / allSent) * 100) : 0;
+  let allPctStock = allStock > 0 ? Math.round((allDone / allStock) * 100) : 0;
   let escalateHtml = oldestGlobal ? `
     <div class="form-card" style="border-left:6px solid var(--red);">
       <div style="font-size:12px; color:var(--ink-soft); text-transform:uppercase; margin-bottom:4px;">ต้องเร่งดูก่อน (ticket ค้างนานสุด)</div>
@@ -475,27 +507,68 @@ function renderOverview() {
       <h1>OVERVIEW DASHBOARD</h1>
       ${syncIndicatorHtml()}
     </div>
-    <div class="content">
-      <div class="overall-card">
-        <div class="overall-title">สรุปยอดรวมทุกรุ่น (All Models)</div>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 16px;">
-          <div><div style="font-size:12px; color:#CBD5E1;">Jig ทั้งหมดทุกโมเดล (Total Stock)</div></div>
-          <div style="font-family:'IBM Plex Mono'; font-size:28px; font-weight:700;">${allStock} ชิ้น</div>
+    <div id="overviewContentOuter">
+      <div class="content" id="overviewContent">
+        <div class="overall-card">
+          <div class="overall-title">สรุปยอดรวมทุกรุ่น (All Models)</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 16px;">
+            <div><div style="font-size:12px; color:#CBD5E1;">Jig ทั้งหมดทุกโมเดล (Total Stock)</div></div>
+            <div style="font-family:'IBM Plex Mono'; font-size:28px; font-weight:700;">${allStock} ชิ้น</div>
+          </div>
+          <div style="display:flex; justify-content:space-around; align-items:center;">
+             <div style="text-align:center;"><div style="font-size:12px; color:#CBD5E1;">ส่งซ่อมรวม</div><div style="font-family:'IBM Plex Mono'; font-size:30px; font-weight:700;">${allSent}</div></div>
+             <div style="text-align:center;"><div style="font-size:12px; color:#10B981;">ทำเสร็จแล้ว</div><div style="font-family:'IBM Plex Mono'; font-size:30px; font-weight:700; color:#34D399;">${allDone}</div></div>
+             <div style="text-align:center;"><div style="font-size:12px; color:#FCA5A5;">ค้างซ่อม (PE)</div><div style="font-family:'IBM Plex Mono'; font-size:30px; font-weight:700; color:#F87171;">${allSent - allDone}</div></div>
+          </div>
+          <div style="margin-top:16px; font-size:12px; color:#34D399; font-weight:700;">ความสำเร็จของงานที่ส่งซ่อม (Done / ส่งซ่อม): ${allPct}%</div>
+          <div class="progress-bg" style="background:rgba(255,255,255,0.2); margin-top:8px; height:10px;">
+            <div class="progress-fill" style="background:#34D399; width:${allPct}%"></div>
+          </div>
+          <div style="margin-top:16px; font-size:12px; color:#60A5FA; font-weight:700;">% ความสำเร็จรวม (ทำเสร็จแล้ว / Jig ทั้งหมดทุกโมเดล): ${allPctStock}%</div>
+          <div class="progress-bg" style="background:rgba(255,255,255,0.2); margin-top:8px; height:10px;">
+            <div class="progress-fill" style="background:#60A5FA; width:${allPctStock}%"></div>
+          </div>
         </div>
-        <div style="display:flex; justify-content:space-around; align-items:center;">
-           <div style="text-align:center;"><div style="font-size:12px; color:#CBD5E1;">ส่งซ่อมรวม</div><div style="font-family:'IBM Plex Mono'; font-size:30px; font-weight:700;">${allSent}</div></div>
-           <div style="text-align:center;"><div style="font-size:12px; color:#10B981;">ทำเสร็จแล้ว</div><div style="font-family:'IBM Plex Mono'; font-size:30px; font-weight:700; color:#34D399;">${allDone}</div></div>
-           <div style="text-align:center;"><div style="font-size:12px; color:#FCA5A5;">ค้างซ่อม (PE)</div><div style="font-family:'IBM Plex Mono'; font-size:30px; font-weight:700; color:#F87171;">${allSent - allDone}</div></div>
-        </div>
-        <div style="margin-top:16px; font-size:12px; color:#34D399; font-weight:700;">ภาพรวมความสำเร็จการซ่อม (Completed): ${allPct}%</div>
-        <div class="progress-bg" style="background:rgba(255,255,255,0.2); margin-top:8px; height:12px;">
-          <div class="progress-fill" style="background:#34D399; width:${allPct}%"></div>
-        </div>
+        ${escalateHtml}
+        <div class="models-grid">${modelsHtml}</div>
       </div>
-      ${escalateHtml}
-      ${modelsHtml}
     </div>
   `;
+  adjustOverviewFit();
+}
+
+// ปรับสเกลเนื้อหา Overview ให้พอดี 1 หน้าจอบน PC โดยไม่ต้องเลื่อนขึ้นลง
+function adjustOverviewFit() {
+  const header = document.querySelector('.role-header');
+  const outer = document.getElementById('overviewContentOuter');
+  const content = document.getElementById('overviewContent');
+  if (!header || !outer || !content) return;
+
+  const isDesktop = window.innerWidth > 900;
+  document.body.classList.toggle('desktop-fit', isDesktop);
+
+  if (!isDesktop) {
+    content.style.transform = '';
+    outer.style.height = '';
+    outer.style.overflow = '';
+    return;
+  }
+
+  // reset ก่อนวัดขนาดจริง
+  content.style.transform = 'none';
+  outer.style.height = 'auto';
+  outer.style.overflow = 'visible';
+
+  requestAnimationFrame(() => {
+    const headerH = header.getBoundingClientRect().height;
+    const availableH = Math.max(window.innerHeight - headerH - 16, 200);
+    const naturalH = content.scrollHeight;
+    const scale = naturalH > 0 ? Math.min(availableH / naturalH, 1) : 1;
+
+    content.style.transform = `scale(${scale})`;
+    outer.style.height = (naturalH * scale) + 'px';
+    outer.style.overflow = 'hidden';
+  });
 }
 
 function renderPaint() {
@@ -632,11 +705,26 @@ function renderMaint() {
 // ====================================================================
 function boot() {
   loadLocal();
-  if (!window.location.hash) window.location.hash = window.innerWidth > 768 ? 'overview' : 'home';
+  // เปิดจากจอ PC (>900px) -> เด้งไปหน้า Overview ทันทีเสมอ (ไม่สนใจ hash เดิมที่ค้างไว้)
+  if (window.innerWidth > 900) {
+    window.location.hash = 'overview';
+  } else if (!window.location.hash) {
+    window.location.hash = 'home';
+  }
   route();
   fetchFromSheets(true);
 }
 window.addEventListener('hashchange', route);
+
+// เมื่อย่อ/ขยายหน้าต่าง ให้คำนวณสเกลของหน้า Overview ใหม่ (debounce กันเรียกถี่เกินไป)
+let __resizeTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(__resizeTimer);
+  __resizeTimer = setTimeout(() => {
+    if (window.location.hash === '#overview') adjustOverviewFit();
+  }, 120);
+});
+
 boot();
 </script>
 </body>
