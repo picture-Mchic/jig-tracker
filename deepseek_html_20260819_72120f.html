@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+  <title>Jig Tracker v2 — Role Based</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #F3F0E8;
+      --card: #FFFFFF;
+      --ink: #23262B;
+      --ink-soft: #6B6A63;
+      --line: #DEDACD;
+      --green: #4B7752;
+      --green-bg: #E7F0E4;
+      --red: #C0392B;
+      --red-bg: #FBEAE7;
+      --accent: #3E5C76;
+      --accent-dark: #2C4356;
+      --accent-paint: #E1592C;
+      --accent-maint: #B8791E;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: 'Inter', system-ui, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .app-root { max-width: 640px; margin: 0 auto; padding-bottom: 60px; }
+    .eyebrow {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: #C6D3DD;
+      margin: 0 0 6px;
+    }
+    .home-wrap { padding: 28px 18px 10px; }
+    .home-head { text-align: center; margin-bottom: 22px; }
+    .home-head .eyebrow { color: var(--ink-soft); }
+    .home-head h1 {
+      font-family: 'Oswald', sans-serif;
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: .01em;
+      margin: 0;
+      text-transform: uppercase;
+    }
+    .role-card {
+      display: block;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-left: 6px solid var(--card-accent, var(--accent));
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin-bottom: 14px;
+      text-decoration: none;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .role-card.role-overview { --card-accent: #3E5C76; }
+    .role-card.role-paint { --card-accent: #E1592C; }
+    .role-card.role-maintenance { --card-accent: #B8791E; }
+    .role-tag {
+      display: inline-block;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      color: #fff;
+      background: var(--card-accent, var(--accent));
+      padding: 3px 8px;
+      border-radius: 5px;
+      margin-bottom: 8px;
+    }
+    .role-card h2 {
+      font-family: 'Oswald', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 4px;
+    }
+    .role-card p { margin: 0; font-size: 13px; color: var(--ink-soft); }
+
+    .role-header {
+      background: var(--accent-dark);
+      color: #F3F0E8;
+      padding: 18px 20px 20px;
+    }
+    .role-header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .home-link { color: #D8E2E9; font-size: 12px; text-decoration: none; font-family: 'IBM Plex Mono', monospace; background: none; border: none; padding: 0; cursor: pointer; }
+    .refresh-pill {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #fff;
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .role-header h1 {
+      font-family: 'Oswald', sans-serif;
+      font-weight: 600;
+      font-size: 20px;
+      letter-spacing: .02em;
+      margin: 0;
+      text-transform: uppercase;
+    }
+    .sync-note { font-size: 10.5px; color: #B9C9D6; margin-top: 8px; font-family: 'IBM Plex Mono', monospace; }
+
+    .content { padding: 16px; }
+
+    .tabs {
+      display: flex;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      flex: 1 1 auto;
+      min-width: 70px;
+      padding: 10px 6px;
+      background: transparent;
+      border: none;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      cursor: pointer;
+    }
+    .tab-btn.active { background: var(--accent); color: #fff; }
+
+    .overall-card {
+      background: var(--accent-dark);
+      color: #fff;
+      border-radius: 10px;
+      padding: 14px 16px 16px;
+      margin-bottom: 16px;
+    }
+    .overall-title {
+      font-family: 'Oswald', sans-serif;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin-bottom: 10px;
+      color: #DCE6EC;
+    }
+    .metrics5 {
+      display: grid;
+      grid-template-columns: repeat(5,1fr);
+      gap: 6px;
+    }
+    .overall-card .metric { background: rgba(255,255,255,0.1); }
+    .overall-card .metric .l { color: #CBD8E1; }
+    .metric {
+      text-align: center;
+      background: var(--paper);
+      border-radius: 7px;
+      padding: 7px 2px;
+    }
+    .metric .v {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 16px;
+      font-weight: 600;
+      display: block;
+    }
+    .metric .l {
+      font-size: 8.5px;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      letter-spacing: .02em;
+      line-height: 1.3;
+    }
+    .metric-ng .v { color: var(--red); }
+
+    .model-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 14px 16px 16px;
+      margin-bottom: 14px;
+    }
+    .model-name {
+      font-family: 'Oswald', sans-serif;
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .side-block { margin-bottom: 10px; }
+    .side-block:last-child { margin-bottom: 0; }
+    .side-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .form-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .selector-group { margin-bottom: 12px; }
+    .selector-group label, .field label {
+      display: block;
+      font-size: 11px;
+      color: var(--ink-soft);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin-bottom: 6px;
+    }
+    .chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .chip {
+      padding: 8px 14px;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      border-radius: 20px;
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      color: var(--ink-soft);
+      cursor: pointer;
+    }
+    .chip-active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .field-row { display: flex; gap: 10px; }
+    .field { flex: 1; margin-bottom: 12px; }
+    .field input[type=number], .field input[type=text] {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 15px;
+      background: #fff;
+      color: var(--ink);
+    }
+    .field input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .save-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .save-btn:active { background: var(--accent-dark); }
+    .ng-btn { background: var(--red); }
+    .ng-btn:active { background: #96261A; }
+    .small-btn { width: auto; padding: 9px 16px; font-size: 13px; }
+
+    .hint-text { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 14px; line-height: 1.5; }
+
+    .list-heading {
+      font-family: 'Oswald', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      color: var(--ink-soft);
+      margin: 18px 0 10px;
+    }
+    .ticket-row {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--accent);
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .ticket-row.ticket-ng { border-left-color: var(--red); background: var(--red-bg); }
+    .tr-main { display: flex; align-items: center; gap: 6px; }
+    .tr-model { font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 14px; }
+    .tr-side { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-soft); }
+    .tr-qty { font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--accent-dark); }
+    .tr-time, .tr-status { font-size: 11px; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; }
+    .ng-badge {
+      background: var(--red);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .03em;
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .ticket-card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--accent);
+      border-radius: 10px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+    .ticket-card.ticket-ng { border-left-color: var(--red); }
+    .tc-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px 8px;
+    }
+    .tc-model { font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 16px; }
+    .tc-body { padding: 0 16px 14px; }
+    .tc-qty { font-family: 'IBM Plex Mono', monospace; font-size: 14px; margin-bottom: 4px; }
+    .tc-note { font-size: 12px; color: var(--ink-soft); font-style: italic; margin-bottom: 4px; }
+    .tc-time { font-size: 11px; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; margin-bottom: 10px; }
+    .tc-progress {
+      margin: 8px 0 12px;
+      height: 8px;
+      background: #e9e5dc;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .tc-progress-bar {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 4px;
+      transition: width .3s;
+    }
+    .tc-progress-bar.done { background: var(--green); }
+    .tc-progress-bar.ng { background: var(--red); }
+
+    .edit-panel { display: none; padding: 0 16px 16px; border-top: 1px dashed var(--line); margin-top: 2px; padding-top: 12px; }
+    .edit-panel.open { display: block; }
+
+    .inv-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+    .inv-label { flex: 1; font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 14px; }
+    .inv-row input {
+      width: 80px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    .empty-note { text-align: center; color: var(--ink-soft); font-size: 13px; padding: 24px 10px; }
+    .loading-msg { text-align: center; color: var(--ink-soft); font-size: 13px; padding: 60px 10px; font-family: 'IBM Plex Mono', monospace; }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--ink);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 24px;
+      font-size: 13px;
+      opacity: 0;
+      transition: opacity .25s ease, transform .25s ease;
+      z-index: 50;
+      max-width: 88%;
+      text-align: center;
+    }
+    .toast.toast-error { background: var(--red); }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    .external-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+    }
+    .ext-btn {
+      padding: 8px 14px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--paper);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+    }
+    .ext-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .ext-btn.github { background: #24292e; color: #fff; border-color: #24292e; }
+    .ext-btn.sheets { background: #0F9D58; color: #fff; border-color: #0F9D58; }
+    .modal-overlay {
+      position: fixed;
+      top:0; left:0; right:0; bottom:0;
+      background: rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 20px;
+    }
+    .modal-box {
+      background: #fff;
+      max-width: 460px;
+      width: 100%;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+    .modal-box h3 { margin-top:0; font-family: 'Oswald', sans-serif; }
+    .modal-box label { font-size:13px; display:block; margin:8px 0 4px; }
+    .modal-box input, .modal-box textarea {
+      width:100%;
+      padding:10px;
+      border:1px solid var(--line);
+      border-radius:6px;
+      font-size:14px;
+    }
+    .modal-box .modal-actions { display:flex; gap:10px; margin-top:16px; justify-content:flex-end; }
+    .modal-box .modal-actions button { padding:8px 18px; border:none; border-radius:6px; font-weight:600; cursor:pointer; }
+    .modal-box .modal-actions .btn-primary { background:var(--accent); color:#fff; }
+    .modal-box .modal-actions .btn-secondary { background:var(--paper); color:var(--ink); }
+  </style>
+</head>
+<body>
+<div id="app"><div class="loading-msg">กำลังโหลด...</div></div>
+<script>
+// ====================================================================
+// 1. CONSTANTS & HELPERS
+// ====================================================================
+const MODELS = ['D46H','D41H','578W'];
+const SIDES = ['LH','RH'];
+const STORAGE_PREFIX = 'jig_';
+
+function getKey(type, id) { return `${STORAGE_PREFIX}${type}:${id}`; }
+
+function loadAll(type) {
+  const result = [];
+  const prefix = getKey(type, '');
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(prefix)) {
+      try { result.push(JSON.parse(localStorage.getItem(key))); }
+      catch(e) {}
+    }
+  }
+  return result;
+}
+
+function loadOne(type, id) {
+  try { return JSON.parse(localStorage.getItem(getKey(type, id))); }
+  catch(e) { return null; }
+}
+
+function saveOne(type, id, data) {
+  localStorage.setItem(getKey(type, id), JSON.stringify(data));
+}
+
+function deleteOne(type, id) {
+  localStorage.removeItem(getKey(type, id));
+}
+
+function getCurrentRole() {
+  const hash = location.hash.replace('#', '');
+  if (hash === 'overview') return 'overview';
+  if (hash === 'paint') return 'paint';
+  if (hash === 'maintenance') return 'maintenance';
+  return null;
+}
+
+function getRoleColor(role) {
+  if (role === 'paint') return '#E1592C';
+  if (role === 'maintenance') return '#B8791E';
+  return '#3E5C76';
+}
+
+function escapeHtml(s) {
+  return (s || '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function fmtTime(iso) {
+  if (!iso) return '-';
+  const d = new Date(iso);
+  return d.toLocaleString('th-TH', { day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+
+function showToast(msg, type) {
+  const t = document.createElement('div');
+  t.className = 'toast' + (type === 'error' ? ' toast-error' : '');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('show'));
+  setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 2200);
+}
+
+// ====================================================================
+// 2. BUSINESS LOGIC
+// ====================================================================
+function getTickets(role) {
+  const all = loadAll('ticket');
+  if (role === 'overview') return all;
+  return all.filter(t => t.role === role);
+}
+
+function getInventory(model, side) {
+  const key = `${model}-${side}`;
+  const data = loadOne('inventory', key);
+  return data ? data.total : 0;
+}
+
+function setInventory(model, side, total) {
+  const key = `${model}-${side}`;
+  saveOne('inventory', key, { total: Number(total), updatedAt: new Date().toISOString() });
+}
+
+function createTicket(role, model, side, kind, totalQty, note) {
+  const id = 'tk_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+  const now = new Date().toISOString();
+  const ticket = {
+    id, model, side, kind, role,
+    totalQty: Number(totalQty),
+    completedQty: 0,
+    remainingQty: Number(totalQty),
+    status: 'pending', // pending, in_progress, completed, received
+    note: note || '',
+    createdAt: now,
+    updatedAt: now,
+    createdBy: role,
+    history: [{ action: 'created', timestamp: now }]
+  };
+  saveOne('ticket', id, ticket);
+  return ticket;
+}
+
+function updateProgress(role, id, additionalQty) {
+  const ticket = loadOne('ticket', id);
+  if (!ticket || ticket.role !== role) return null;
+  const qty = Number(additionalQty);
+  if (qty <= 0) return ticket;
+  const newCompleted = Math.min(ticket.totalQty, ticket.completedQty + qty);
+  const added = newCompleted - ticket.completedQty;
+  if (added === 0) return ticket;
+  ticket.completedQty = newCompleted;
+  ticket.remainingQty = ticket.totalQty - ticket.completedQty;
+  ticket.status = ticket.remainingQty === 0 ? 'completed' : 'in_progress';
+  ticket.updatedAt = new Date().toISOString();
+  ticket.history.push({ action: 'progress', qty: added, timestamp: ticket.updatedAt });
+  saveOne('ticket', id, ticket);
+  return ticket;
+}
+
+function receiveTicket(role, id) {
+  const ticket = loadOne('ticket', id);
+  if (!ticket) return null;
+  if (ticket.status !== 'completed') return null;
+  ticket.status = 'received';
+  ticket.updatedAt = new Date().toISOString();
+  ticket.history.push({ action: 'received', timestamp: ticket.updatedAt });
+  saveOne('ticket', id, ticket);
+  return ticket;
+}
+
+function getStats(role) {
+  const tickets = getTickets(role);
+  const stats = {
+    total: 0,
+    pending: 0,
+    in_progress: 0,
+    completed: 0,
+    received: 0,
+    totalQty: 0,
+    completedQty: 0,
+    remainingQty: 0,
+    ngPending: 0
+  };
+  for (const t of tickets) {
+    stats.total++;
+    if (t.status === 'pending') stats.pending++;
+    else if (t.status === 'in_progress') stats.in_progress++;
+    else if (t.status === 'completed') stats.completed++;
+    else if (t.status === 'received') stats.received++;
+    stats.totalQty += t.totalQty;
+    stats.completedQty += t.completedQty;
+    stats.remainingQty += t.remainingQty;
+    if (t.kind === 'ng' && t.status !== 'received') stats.ngPending += t.remainingQty;
+  }
+  return stats;
+}
+
+function getModelStats(role) {
+  const result = {};
+  for (const model of MODELS) {
+    result[model] = {};
+    for (const side of SIDES) {
+      const tickets = getTickets(role).filter(t => t.model === model && t.side === side);
+      let totalQty = 0, completedQty = 0, remainingQty = 0, count = 0;
+      for (const t of tickets) {
+        totalQty += t.totalQty;
+        completedQty += t.completedQty;
+        remainingQty += t.remainingQty;
+        count++;
+      }
+      result[model][side] = { totalQty, completedQty, remainingQty, count };
+    }
+  }
+  return result;
+}
+
+// ====================================================================
+// 3. TOAST & MODAL
+// ====================================================================
+let modalCallback = null;
+
+function showModal(title, fields, callback) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  let html = `<div class="modal-box"><h3>${escapeHtml(title)}</h3>`;
+  for (const f of fields) {
+    html += `<label>${escapeHtml(f.label)}</label>`;
+    if (f.type === 'textarea') {
+      html += `<textarea id="modal-${f.id}" placeholder="${escapeHtml(f.placeholder||'')}">${escapeHtml(f.value||'')}</textarea>`;
+    } else {
+      html += `<input type="${f.type||'text'}" id="modal-${f.id}" value="${escapeHtml(f.value||'')}" placeholder="${escapeHtml(f.placeholder||'')}">`;
+    }
+  }
+  html += `<div class="modal-actions">
+    <button class="btn-secondary" data-action="modalCancel">ยกเลิก</button>
+    <button class="btn-primary" data-action="modalConfirm">ตกลง</button>
+  </div></div>`;
+  overlay.innerHTML = html;
+  document.body.appendChild(overlay);
+  modalCallback = callback;
+  overlay.querySelector('[data-action="modalCancel"]').addEventListener('click', () => {
+    document.body.removeChild(overlay);
+    modalCallback = null;
+  });
+  overlay.querySelector('[data-action="modalConfirm"]').addEventListener('click', () => {
+    const data = {};
+    for (const f of fields) {
+      const el = document.getElementById(`modal-${f.id}`);
+      if (el) data[f.id] = el.value;
+    }
+    if (callback) callback(data);
+    document.body.removeChild(overlay);
+    modalCallback = null;
+  });
+}
+
+// ====================================================================
+// 4. EXTERNAL CONNECTIONS (GITHUB & GOOGLE SHEETS)
+// ====================================================================
+function exportToGithub() {
+  const data = exportAllData();
+  const content = JSON.stringify(data, null, 2);
+  // ใช้ GitHub Gist API (ต้องมี token)
+  const token = localStorage.getItem('github_token') || '';
+  if (!token) {
+    showModal('เชื่อมต่อ GitHub', [
+      { id: 'token', label: 'GitHub Personal Access Token (ต้องมีสิทธิ์ gist)', type: 'password', placeholder: 'ghp_xxxx' },
+      { id: 'filename', label: 'ชื่อไฟล์ (ไม่ต้องใส่นามสกุล)', value: 'jig_data' }
+    ], (data) => {
+      if (data.token) localStorage.setItem('github_token', data.token);
+      doGithubExport(data.token, data.filename || 'jig_data', content);
+    });
+    return;
+  }
+  showModal('ส่งข้อมูลไป GitHub', [
+    { id: 'filename', label: 'ชื่อไฟล์ (ไม่ต้องใส่นามสกุล)', value: 'jig_data' }
+  ], (data) => {
+    doGithubExport(token, data.filename || 'jig_data', content);
+  });
+}
+
+function doGithubExport(token, filename, content) {
+  const gist = {
+    description: 'Jig Tracker Data Export',
+    public: false,
+    files: {
+      [filename + '.json']: { content: content }
+    }
+  };
+  fetch('https://api.github.com/gists', {
+    method: 'POST',
+    headers: {
+      'Authorization': `token ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(gist)
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.id) {
+      showToast('✅ ส่งข้อมูลไป GitHub สำเร็จ! Gist ID: ' + data.id);
+      localStorage.setItem('last_gist_id', data.id);
+    } else {
+      showToast('❌ ส่งไม่สำเร็จ: ' + (data.message || 'unknown error'), 'error');
+    }
+  })
+  .catch(err => {
+    showToast('❌ เกิดข้อผิดพลาด: ' + err.message, 'error');
+  });
+}
+
+function importFromGithub() {
+  const token = localStorage.getItem('github_token') || '';
+  if (!token) {
+    showModal('เชื่อมต่อ GitHub', [
+      { id: 'token', label: 'GitHub Personal Access Token', type: 'password', placeholder: 'ghp_xxxx' },
+      { id: 'gist_id', label: 'Gist ID (จากลิงก์ที่เคยส่ง)', placeholder: 'abc123...' }
+    ], (data) => {
+      if (data.token) localStorage.setItem('github_token', data.token);
+      doGithubImport(data.token, data.gist_id);
+    });
+    return;
+  }
+  showModal('นำเข้าข้อมูลจาก GitHub', [
+    { id: 'gist_id', label: 'Gist ID', placeholder: 'abc123...' }
+  ], (data) => {
+    doGithubImport(token, data.gist_id);
+  });
+}
+
+function doGithubImport(token, gistId) {
+  if (!gistId) { showToast('❌ กรุณาระบุ Gist ID', 'error'); return; }
+  fetch(`https://api.github.com/gists/${gistId}`, {
+    headers: { 'Authorization': `token ${token}` }
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.files) {
+      const firstFile = Object.values(data.files)[0];
+      if (firstFile && firstFile.content) {
+        const imported = JSON.parse(firstFile.content);
+        importAllData(imported);
+        showToast('✅ นำเข้าข้อมูลจาก GitHub สำเร็จ!');
+        route();
+      } else {
+        showToast('❌ ไม่พบไฟล์ใน Gist', 'error');
+      }
+    } else {
+      showToast('❌ ไม่พบ Gist: ' + (data.message || ''), 'error');
+    }
+  })
+  .catch(err => {
+    showToast('❌ เกิดข้อผิดพลาด: ' + err.message, 'error');
+  });
+}
+
+function exportToGoogleSheets() {
+  const scriptUrl = localStorage.getItem('gsheets_script_url') || '';
+  if (!scriptUrl) {
+    showModal('เชื่อมต่อ Google Sheets', [
+      { id: 'url', label: 'Google Apps Script Web App URL (ต้อง deploy)', placeholder: 'https://script.google.com/macros/s/.../exec' }
+    ], (data) => {
+      if (data.url) localStorage.setItem('gsheets_script_url', data.url);
+      doSheetsExport(data.url);
+    });
+    return;
+  }
+  doSheetsExport(scriptUrl);
+}
+
+function doSheetsExport(url) {
+  const data = exportAllData();
+  fetch(url, {
+    method: 'POST',
+    mode: 'cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'save', data: data })
+  })
+  .then(res => res.json())
+  .then(result => {
+    if (result.success) {
+      showToast('✅ ส่งข้อมูลไป Google Sheets สำเร็จ!');
+    } else {
+      showToast('❌ ส่งไม่สำเร็จ: ' + (result.error || 'unknown'), 'error');
+    }
+  })
+  .catch(err => {
+    showToast('❌ เกิดข้อผิดพลาด: ' + err.message, 'error');
+  });
+}
+
+function importFromGoogleSheets() {
+  const scriptUrl = localStorage.getItem('gsheets_script_url') || '';
+  if (!scriptUrl) {
+    showModal('เชื่อมต่อ Google Sheets', [
+      { id: 'url', label: 'Google Apps Script Web App URL', placeholder: 'https://script.google.com/macros/s/.../exec' }
+    ], (data) => {
+      if (data.url) localStorage.setItem('gsheets_script_url', data.url);
+      doSheetsImport(data.url);
+    });
+    return;
+  }
+  doSheetsImport(scriptUrl);
+}
+
+function doSheetsImport(url) {
+  fetch(url, {
+    method: 'POST',
+    mode: 'cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'load' })
+  })
+  .then(res => res.json())
+  .then(result => {
+    if (result.success && result.data) {
+      importAllData(result.data);
+      showToast('✅ นำเข้าข้อมูลจาก Google Sheets สำเร็จ!');
+      route();
+    } else {
+      showToast('❌ นำเข้าไม่สำเร็จ: ' + (result.error || 'unknown'), 'error');
+    }
+  })
+  .catch(err => {
+    showToast('❌ เกิดข้อผิดพลาด: ' + err.message, 'error');
+  });
+}
+
+function exportAllData() {
+  const tickets = loadAll('ticket');
+  const inventory = loadAll('inventory');
+  return { tickets, inventory, exportedAt: new Date().toISOString() };
+}
+
+function importAllData(data) {
+  if (!data || !data.tickets) return;
+  // ลบข้อมูลเก่าทั้งหมด
+  const allTicketKeys = [];
+  const prefix = getKey('ticket', '');
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(prefix)) allTicketKeys.push(key);
+  }
+  for (const k of allTicketKeys) localStorage.removeItem(k);
+  
+  const allInvKeys = [];
+  const invPrefix = getKey('inventory', '');
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith(invPrefix)) allInvKeys.push(key);
+  }
+  for (const k of allInvKeys) localStorage.removeItem(k);
+  
+  // นำเข้าใหม่
+  for (const t of data.tickets) {
+    saveOne('ticket', t.id, t);
+  }
+  if (data.inventory) {
+    for (const inv of data.inventory) {
+      const key = inv.id || `${inv.model}-${inv.side}`;
+      saveOne('inventory', key, inv);
+    }
+  }
+}
+
+// ====================================================================
+// 5. UI RENDER FUNCTIONS
+// ====================================================================
+let currentTab = { paint: 'send', maint: 'todo' };
+
+function renderHome() {
+  const html = `
+    <div class="home-wrap">
+      <div class="home-head">
+        <p class="eyebrow">Jig Tracker v2</p>
+        <h1>เลือกมุมมอง</h1>
+      </div>
+      <a class="role-card role-overview" href="#overview">
+        <span class="role-tag">ภาพรวม</span>
+        <h2>Overview Dashboard</h2>
+        <p>ดูข้อมูลทั้งหมดจากทุกฝ่าย</p>
+      </a>
+      <a class="role-card role-paint" href="#paint">
+        <span class="role-tag">ฝ่าย Paint</span>
+        <h2>ส่งงาน · รับงานคืน</h2>
+        <p>สร้างงาน ส่งให้ Maintenance</p>
+      </a>
+      <a class="role-card role-maintenance" href="#maintenance">
+        <span class="role-tag">ฝ่าย Maintenance</span>
+        <h2>รายการที่ต้องทำ</h2>
+        <p>ดูและอัปเดตความคืบหน้า</p>
+      </a>
+    </div>
+  `;
+  document.getElementById('app').innerHTML = html;
+}
+
+function renderOverview() {
+  const role = 'overview';
+  const stats = getStats(role);
+  const modelStats = getModelStats(role);
+  const tickets = getTickets(role);
+  
+  let modelsHtml = '';
+  for (const model of MODELS) {
+    let sidesHtml = '';
+    for (const side of SIDES) {
+      const s = modelStats[model][side];
+      sidesHtml += `
+        <div class="side-block">
+          <div class="side-label">${side === 'LH' ? 'LH (ซ้าย)' : 'RH (ขวา)'}</div>
+          <div class="metrics5">
+            <div class="metric"><span class="v">${s.totalQty}</span><span class="l">ทั้งหมด</span></div>
+            <div class="metric"><span class="v">${s.completedQty}</span><span class="l">ทำแล้ว</span></div>
+            <div class="metric"><span class="v">${s.remainingQty}</span><span class="l">คงเหลือ</span></div>
+            <div class="metric"><span class="v">${s.count}</span><span class="l">จำนวนงาน</span></div>
+          </div>
+        </div>
+      `;
+    }
+    modelsHtml += `<div class="model-card"><div class="model-name">${model}</div>${sidesHtml}</div>`;
+  }
+  
+  const html = `
+    <div class="role-header" style="background:#2C4356;">
+      <div class="role-header-top">
+        <button class="home-link" data-action="goHome">← เปลี่ยนมุมมอง</button>
+        <button class="refresh-pill" data-action="refresh">↻ รีเฟรช</button>
+      </div>
+      <p class="eyebrow">ภาพรวมทุกฝ่าย</p>
+      <h1>Overview Dashboard</h1>
+      <p class="sync-note">ข้อมูลจาก Paint และ Maintenance</p>
+    </div>
+    <div class="content">
+      <div class="overall-card">
+        <div class="overall-title">ยอดรวมทุกรุ่นทุกข้าง</div>
+        <div class="metrics5">
+          <div class="metric"><span class="v">${stats.totalQty}</span><span class="l">Jig ทั้งหมด</span></div>
+          <div class="metric"><span class="v">${stats.completedQty}</span><span class="l">ทำแล้ว</span></div>
+          <div class="metric"><span class="v">${stats.remainingQty}</span><span class="l">คงเหลือ</span></div>
+          <div class="metric"><span class="v">${stats.pending}</span><span class="l">รอดำเนินการ</span></div>
+          <div class="metric ${stats.ngPending>0?'metric-ng':''}"><span class="v">${stats.ngPending}</span><span class="l">NG ค้าง</span></div>
+        </div>
+      </div>
+      ${modelsHtml}
+      ${externalButtons()}
+    </div>
+  `;
+  document.getElementById('app').innerHTML = html;
+}
+
+function renderPaint() {
+  const role = 'paint';
+  const tickets = getTickets(role);
+  const stats = getStats(role);
+  const tab = currentTab.paint || 'send';
+  
+  let tabContent = '';
+  if (tab === 'send') tabContent = renderPaintSend(role, tickets);
+  else if (tab === 'receive') tabContent = renderPaintReceive(role, tickets);
+  else if (tab === 'ng') tabContent = renderPaintNg(role, tickets);
+  else if (tab === 'settings') tabContent = renderPaintSettings(role);
+  
+  const html = `
+    <div class="role-header" style="background:#B8451F;">
+      <div class="role-header-top">
+        <button class="home-link" data-action="goHome">← เปลี่ยนมุมมอง</button>
+        <button class="refresh-pill" data-action="refresh">↻ รีเฟรช</button>
+      </div>
+      <p class="eyebrow">ฝ่าย Paint</p>
+      <h1>ส่งงาน · รับงานคืน</h1>
+      <p class="sync-note">สร้างงานส่งให้ Maintenance</p>
+    </div>
+    <div class="content">
+      <div class="tabs">
+        <button class="tab-btn ${tab==='send'?'active':''}" data-action="switchTab" data-tab="paint" data-tabvalue="send">ส่งงาน</button>
+        <button class="tab-btn ${tab==='receive'?'active':''}" data-action="switchTab" data-tab="paint" data-tabvalue="receive">รับงานคืน</button>
+        <button class="tab-btn ${tab==='ng'?'active':''}" data-action="switchTab" data-tab="paint" data-tabvalue="ng">ส่ง NG</button>
+        <button class="tab-btn ${tab==='settings'?'active':''}" data-action="switchTab" data-tab="paint" data-tabvalue="settings">จำนวน Jig</button>
+      </div>
+      ${tabContent}
+      ${externalButtons()}
+    </div>
+  `;
+  document.getElementById('app').innerHTML = html;
+}
+
+function renderPaintSend(role, tickets) {
+  const openTickets = tickets.filter(t => t.status === 'pending' || t.status === 'in_progress');
+  return `
+    <div class="form-card">
+      <div class="selector-group"><label>เลือกรุ่น</label><div class="chip-row">
+        ${MODELS.map(m => `<button class="chip ${m === paintForm.model ? 'chip-active' : ''}" data-action="setPaintField" data-field="model" data-value="${m}">${m}</button>`).join('')}
+      </div></div>
+      <div class="selector-group"><label>เลือกข้าง</label><div class="chip-row">
+        ${SIDES.map(s => `<button class="chip ${s === paintForm.side ? 'chip-active' : ''}" data-action="setPaintField" data-field="side" data-value="${s}">${s === 'LH' ? 'LH ซ้าย' : 'RH ขวา'}</button>`).join('')}
+      </div></div>
+      <div class="field"><label>จำนวนที่ส่ง</label>
+        <input type="number" min="1" id="paintQty" value="${paintForm.qty || ''}">
+      </div>
+      <div class="field"><label>หมายเหตุ</label>
+        <input type="text" id="paintNote" value="${escapeHtml(paintForm.note || '')}" placeholder="เช่น ล็อตเช้า">
+      </div>
+      <button class="save-btn" data-action="doCreateTicket">ส่งงาน</button>
+    </div>
+    <h3 class="list-heading">งานที่รอความคืบหน้า (${openTickets.length})</h3>
+    ${openTickets.length ? openTickets.map(t => ticketCard(t, role)).join('') : '<div class="empty-note">ยังไม่มีงานค้าง</div>'}
+  `;
+}
+
+function renderPaintReceive(role, tickets) {
+  const doneTickets = tickets.filter(t => t.status === 'completed');
+  const receivedTickets = tickets.filter(t => t.status === 'received');
+  return `
+    <h3 class="list-heading">รอรับคืน (${doneTickets.length})</h3>
+    ${doneTickets.length ? doneTickets.map(t => `
+      <div class="ticket-card ${t.kind === 'ng' ? 'ticket-ng' : ''}">
+        <div class="tc-head">
+          <span class="tc-model">${t.model} <span class="tr-side">${t.side}</span></span>
+          ${t.kind === 'ng' ? '<span class="ng-badge">NG</span>' : ''}
+        </div>
+        <div class="tc-body">
+          <div class="tc-qty">ทำเสร็จ ${t.completedQty} / ${t.totalQty} ชิ้น</div>
+          ${t.note ? `<div class="tc-note">หมายเหตุ: ${escapeHtml(t.note)}</div>` : ''}
+          <div class="tc-time">เสร็จเมื่อ ${fmtTime(t.updatedAt)}</div>
+          <button class="save-btn" data-action="doReceive" data-id="${t.id}">รับแล้ว</button>
+        </div>
+      </div>
+    `).join('') : '<div class="empty-note">ยังไม่มีงานรอรับ</div>'}
+    <h3 class="list-heading">ประวัติที่รับแล้ว</h3>
+    ${receivedTickets.length ? receivedTickets.slice(0,15).map(t => ticketRow(t)).join('') : '<div class="empty-note">ยังไม่มีประวัติ</div>'}
+  `;
+}
+
+function renderPaintNg(role, tickets) {
+  const ngTickets = tickets.filter(t => t.kind === 'ng' && t.status !== 'received');
+  return `
+    <div class="form-card">
+      <div class="selector-group"><label>เลือกรุ่น</label><div class="chip-row">
+        ${MODELS.map(m => `<button class="chip ${m === ngForm.model ? 'chip-active' : ''}" data-action="setNgField" data-field="model" data-value="${m}">${m}</button>`).join('')}
+      </div></div>
+      <div class="selector-group"><label>เลือกข้าง</label><div class="chip-row">
+        ${SIDES.map(s => `<button class="chip ${s === ngForm.side ? 'chip-active' : ''}" data-action="setNgField" data-field="side" data-value="${s}">${s === 'LH' ? 'LH ซ้าย' : 'RH ขวา'}</button>`).join('')}
+      </div></div>
+      <div class="field"><label>จำนวน NG</label>
+        <input type="number" min="1" id="ngQty" value="${ngForm.qty || ''}">
+      </div>
+      <div class="field"><label>อาการ / หมายเหตุ</label>
+        <input type="text" id="ngNote" value="${escapeHtml(ngForm.note || '')}" placeholder="เช่น เบ้าแตก">
+      </div>
+      <button class="save-btn ng-btn" data-action="doCreateNg">ส่งซ่อม (NG)</button>
+    </div>
+    <h3 class="list-heading">NG ที่ค้าง (${ngTickets.length})</h3>
+    ${ngTickets.length ? ngTickets.map(t => ticketRow(t)).join('') : '<div class="empty-note">ไม่มี NG ค้าง</div>'}
+  `;
+}
+
+function renderPaintSettings(role) {
+  const rows = [];
+  for (const model of MODELS) {
+    for (const side of SIDES) {
+      const key = `${model}-${side}`;
+      const total = getInventory(model, side);
+      rows.push(`
+        <div class="inv-row">
+          <div class="inv-label">${model} <span class="tr-side">${side}</span></div>
+          <input type="number" min="0" id="inv-${key}" value="${total}">
+          <button class="save-btn small-btn" data-action="doSetInventory" data-model="${model}" data-side="${side}">บันทึก</button>
+        </div>
+      `);
+    }
+  }
+  return `
+    <p class="hint-text">กำหนดจำนวน Jig ทั้งหมดที่มีอยู่จริงของแต่ละรุ่น/ข้าง</p>
+    ${rows.join('')}
+  `;
+}
+
+function renderMaintenance() {
+  const role = 'maintenance';
+  const tickets = getTickets(role);
+  const stats = getStats(role);
+  const tab = currentTab.maint || 'todo';
+  
+  let tabContent = '';
+  if (tab === 'todo') tabContent = renderMaintTodo(role, tickets);
+  else if (tab === 'history') tabContent = renderMaintHistory(role, tickets);
+  
+  const html = `
+    <div class="role-header" style="background:#8F5F16;">
+      <div class="role-header-top">
+        <button class="home-link" data-action="goHome">← เปลี่ยนมุมมอง</button>
+        <button class="refresh-pill" data-action="refresh">↻ รีเฟรช</button>
+      </div>
+      <p class="eyebrow">ฝ่าย Maintenance</p>
+      <h1>รายการที่ต้องทำ</h1>
+      <p class="sync-note">อัปเดตความคืบหน้าของงาน</p>
+    </div>
+    <div class="content">
+      <div class="tabs">
+        <button class="tab-btn ${tab==='todo'?'active':''}" data-action="switchTab" data-tab="maint" data-tabvalue="todo">งานค้าง</button>
+        <button class="tab-btn ${tab==='history'?'active':''}" data-action="switchTab" data-tab="maint" data-tabvalue="history">ประวัติ</button>
+      </div>
+      ${tabContent}
+      ${externalButtons()}
+    </div>
+  `;
+  document.getElementById('app').innerHTML = html;
+}
+
+function renderMaintTodo(role, tickets) {
+  const todo = tickets.filter(t => t.status === 'pending' || t.status === 'in_progress');
+  if (!todo.length) return '<div class="empty-note">ไม่มีงานค้าง 🎉</div>';
+  return todo.map(t => {
+    const pct = t.totalQty > 0 ? Math.round((t.completedQty / t.totalQty) * 100) : 0;
+    return `
+      <div class="ticket-card ${t.kind === 'ng' ? 'ticket-ng' : ''}">
+        <div class="tc-head">
+          <span class="tc-model">${t.model} <span class="tr-side">${t.side}</span></span>
+          ${t.kind === 'ng' ? '<span class="ng-badge">NG</span>' : ''}
+          <span class="tr-status">${t.status === 'pending' ? '⏳ รอเริ่ม' : '🔄 กำลังทำ'}</span>
+        </div>
+        <div class="tc-body">
+          <div class="tc-qty">${t.completedQty} / ${t.totalQty} ชิ้น (เหลือ ${t.remainingQty})</div>
+          <div class="tc-progress">
+            <div class="tc-progress-bar ${t.kind === 'ng' ? 'ng' : (pct === 100 ? 'done' : '')}" style="width:${pct}%"></div>
+          </div>
+          ${t.note ? `<div class="tc-note">หมายเหตุ: ${escapeHtml(t.note)}</div>` : ''}
+          <div class="tc-time">สร้าง ${fmtTime(t.createdAt)}</div>
+          <div class="edit-panel open">
+            <div class="field"><label>เพิ่มจำนวนที่ทำเสร็จ</label>
+              <input type="number" min="1" max="${t.remainingQty}" id="maintQty-${t.id}" value="${Math.min(1, t.remainingQty)}">
+            </div>
+            <div class="field"><label>หมายเหตุ</label>
+              <input type="text" id="maintNote-${t.id}" placeholder="เช่น ซ่อมเสร็จบางส่วน">
+            </div>
+            <button class="save-btn" data-action="doUpdateProgress" data-id="${t.id}">อัปเดตความคืบหน้า</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderMaintHistory(role, tickets) {
+  const hist = tickets.filter(t => t.status === 'completed' || t.status === 'received');
+  if (!hist.length) return '<div class="empty-note">ยังไม่มีประวัติ</div>';
+  return hist.slice(0,30).map(t => ticketRow(t)).join('');
+}
+
+// ====================================================================
+// 6. UI COMPONENTS
+// ====================================================================
+function ticketRow(t) {
+  const pct = t.totalQty > 0 ? Math.round((t.completedQty / t.totalQty) * 100) : 0;
+  return `
+    <div class="ticket-row ${t.kind === 'ng' ? 'ticket-ng' : ''}">
+      <div class="tr-main">
+        <span class="tr-model">${t.model} <span class="tr-side">${t.side}</span></span>
+        ${t.kind === 'ng' ? '<span class="ng-badge">NG</span>' : ''}
+      </div>
+      <div class="tr-qty">${t.completedQty}/${t.totalQty} (${pct}%)</div>
+      <div class="tr-status">${t.status}</div>
+      <div class="tr-time">${fmtTime(t.updatedAt)}</div>
+    </div>
+  `;
+}
+
+function ticketCard(t, role) {
+  const pct = t.totalQty > 0 ? Math.round((t.completedQty / t.totalQty) * 100) : 0;
+  return `
+    <div class="ticket-card ${t.kind === 'ng' ? 'ticket-ng' : ''}">
+      <div class="tc-head">
+        <span class="tc-model">${t.model} <span class="tr-side">${t.side}</span></span>
+        ${t.kind === 'ng' ? '<span class="ng-badge">NG</span>' : ''}
+        <span class="tr-status">${t.status}</span>
+      </div>
+      <div class="tc-body">
+        <div class="tc-qty">${t.completedQty} / ${t.totalQty} ชิ้น (เหลือ ${t.remainingQty})</div>
+        <div class="tc-progress">
+          <div class="tc-progress-bar ${t.kind === 'ng' ? 'ng' : (pct === 100 ? 'done' : '')}" style="width:${pct}%"></div>
+        </div>
+        ${t.note ? `<div class="tc-note">${escapeHtml(t.note)}</div>` : ''}
+        <div class="tc-time">${fmtTime(t.updatedAt)}</div>
+      </div>
+    </div>
+  `;
+}
+
+function externalButtons() {
+  return `
+    <div class="external-bar">
+      <button class="ext-btn github" data-action="exportGithub">📤 ส่งไป GitHub</button>
+      <button class="ext-btn github" data-action="importGithub">📥 ดึงจาก GitHub</button>
+      <button class="ext-btn sheets" data-action="exportSheets">📤 ส่งไป Sheets</button>
+      <button class="ext-btn sheets" data-action="importSheets">📥 ดึงจาก Sheets</button>
+    </div>
+  `;
+}
+
+// ====================================================================
+// 7. FORM STATE
+// ====================================================================
+let paintForm = { model: MODELS[0], side: SIDES[0], qty: '', note: '' };
+let ngForm = { model: MODELS[0], side: SIDES[0], qty: '', note: '' };
+
+// ====================================================================
+// 8. ACTIONS (called from event delegation)
+// ====================================================================
+function goHome() { location.hash = 'home'; }
+function refresh() { route(); }
+
+function switchTab(tab, value) {
+  if (tab === 'paint') currentTab.paint = value;
+  else if (tab === 'maint') currentTab.maint = value;
+  route();
+}
+
+function setPaintField(field, value) {
+  paintForm[field] = value;
+  route();
+}
+
+function setNgField(field, value) {
+  ngForm[field] = value;
+  route();
+}
+
+function doCreateTicket() {
+  const qty = parseInt(document.getElementById('paintQty').value);
+  if (!qty || qty <= 0) { showToast('กรุณากรอกจำนวน', 'error'); return; }
+  const note = document.getElementById('paintNote').value;
+  try {
+    createTicket('paint', paintForm.model, paintForm.side, 'normal', qty, note);
+    paintForm.qty = '';
+    paintForm.note = '';
+    showToast('✅ ส่งงานเรียบร้อย');
+    route();
+  } catch(e) {
+    showToast('❌ ส่งไม่สำเร็จ', 'error');
+  }
+}
+
+function doCreateNg() {
+  const qty = parseInt(document.getElementById('ngQty').value);
+  if (!qty || qty <= 0) { showToast('กรุณากรอกจำนวน', 'error'); return; }
+  const note = document.getElementById('ngNote').value;
+  try {
+    createTicket('paint', ngForm.model, ngForm.side, 'ng', qty, note);
+    ngForm.qty = '';
+    ngForm.note = '';
+    showToast('✅ ส่ง NG เรียบร้อย');
+    route();
+  } catch(e) {
+    showToast('❌ ส่งไม่สำเร็จ', 'error');
+  }
+}
+
+function doReceive(id) {
+  try {
+    receiveTicket('paint', id);
+    showToast('✅ รับงานคืนเรียบร้อย');
+    route();
+  } catch(e) {
+    showToast('❌ รับไม่สำเร็จ', 'error');
+  }
+}
+
+function doUpdateProgress(id) {
+  const qtyInput = document.getElementById(`maintQty-${id}`);
+  const noteInput = document.getElementById(`maintNote-${id}`);
+  const qty = parseInt(qtyInput.value);
+  if (!qty || qty <= 0) { showToast('กรุณากรอกจำนวนที่ทำเพิ่ม', 'error'); return; }
+  try {
+    const updated = updateProgress('maintenance', id, qty);
+    if (!updated) { showToast('❌ ไม่พบงานหรือไม่ใช่ของคุณ', 'error'); return; }
+    showToast(`✅ อัปเดตความคืบหน้า: +${qty} ชิ้น`);
+    route();
+  } catch(e) {
+    showToast('❌ อัปเดตไม่สำเร็จ', 'error');
+  }
+}
+
+function doSetInventory(model, side) {
+  const key = `${model}-${side}`;
+  const input = document.getElementById(`inv-${key}`);
+  const val = parseInt(input.value);
+  if (isNaN(val) || val < 0) { showToast('กรุณากรอกตัวเลขที่ถูกต้อง', 'error'); return; }
+  setInventory(model, side, val);
+  showToast('✅ บันทึกจำนวน Jig แล้ว');
+  route();
+}
+
+function exportGithub() { exportToGithub(); }
+function importGithub() { importFromGithub(); }
+function exportSheets() { exportToGoogleSheets(); }
+function importSheets() { importFromGoogleSheets(); }
+
+// ====================================================================
+// 9. ROUTER
+// ====================================================================
+function route() {
+  const role = getCurrentRole();
+  if (!role || role === 'home') {
+    document.body.style.setProperty('--accent', '#3E5C76');
+    document.body.style.setProperty('--accent-dark', '#2C4356');
+    renderHome();
+    return;
+  }
+  // ตั้งสีตาม role
+  if (role === 'paint') {
+    document.body.style.setProperty('--accent', '#E1592C');
+    document.body.style.setProperty('--accent-dark', '#B8451F');
+  } else if (role === 'maintenance') {
+    document.body.style.setProperty('--accent', '#B8791E');
+    document.body.style.setProperty('--accent-dark', '#8F5F16');
+  } else {
+    document.body.style.setProperty('--accent', '#3E5C76');
+    document.body.style.setProperty('--accent-dark', '#2C4356');
+  }
+  
+  if (role === 'overview') renderOverview();
+  else if (role === 'paint') renderPaint();
+  else if (role === 'maintenance') renderMaintenance();
+}
+
+// ====================================================================
+// 10. EVENT DELEGATION
+// ====================================================================
+document.addEventListener('click', function(e) {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const action = el.dataset.action;
+  const arg = el.dataset.arg;
+  const id = el.dataset.id;
+  const model = el.dataset.model;
+  const side = el.dataset.side;
+  const field = el.dataset.field;
+  const value = el.dataset.value;
+  const tab = el.dataset.tab;
+  const tabvalue = el.dataset.tabvalue;
+  
+  if (action === 'goHome') { goHome(); return; }
+  if (action === 'refresh') { refresh(); return; }
+  if (action === 'switchTab' && tab && tabvalue) { switchTab(tab, tabvalue); return; }
+  if (action === 'setPaintField' && field && value) { setPaintField(field, value); return; }
+  if (action === 'setNgField' && field && value) { setNgField(field, value); return; }
+  if (action === 'doCreateTicket') { doCreateTicket(); return; }
+  if (action === 'doCreateNg') { doCreateNg(); return; }
+  if (action === 'doReceive' && id) { doReceive(id); return; }
+  if (action === 'doUpdateProgress' && id) { doUpdateProgress(id); return; }
+  if (action === 'doSetInventory' && model && side) { doSetInventory(model, side); return; }
+  if (action === 'exportGithub') { exportGithub(); return; }
+  if (action === 'importGithub') { importGithub(); return; }
+  if (action === 'exportSheets') { exportSheets(); return; }
+  if (action === 'importSheets') { importSheets(); return; }
+});
+
+// ====================================================================
+// 11. INIT
+// ====================================================================
+window.addEventListener('hashchange', route);
+route();
+</script>
+</body>
+</html>
