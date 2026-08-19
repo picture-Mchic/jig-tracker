@@ -40,7 +40,7 @@
       color: #C6D3DD;
       margin: 0 0 6px;
     }
-    .home-wrap { padding: 28px 18px 10px; }
+    .home-wrap { padding: 28px 18px 10px; max-width: 600px; margin: 0 auto; }
     .home-head { text-align: center; margin-bottom: 22px; }
     .home-head .eyebrow { color: var(--ink-soft); }
     .home-head h1 {
@@ -119,7 +119,7 @@
     }
     .sync-note { font-size: 10.5px; color: #B9C9D6; margin-top: 8px; font-family: 'IBM Plex Mono', monospace; }
 
-    .content { padding: 16px; }
+    .content { padding: 16px; max-width: 600px; margin: 0 auto; }
 
     .tabs {
       display: flex;
@@ -239,7 +239,6 @@
       cursor: pointer;
     }
     .chip-active { background: var(--accent); border-color: var(--accent); color: #fff; }
-    .field-row { display: flex; gap: 10px; }
     .field { flex: 1; margin-bottom: 12px; }
     .field input[type=number], .field input[type=text] {
       width: 100%;
@@ -346,8 +345,7 @@
     .tc-progress-bar.done { background: var(--green); }
     .tc-progress-bar.ng { background: var(--red); }
 
-    .edit-panel { display: none; padding: 0 16px 16px; border-top: 1px dashed var(--line); margin-top: 2px; padding-top: 12px; }
-    .edit-panel.open { display: block; }
+    .edit-panel { padding: 0; border-top: 1px dashed var(--line); margin-top: 10px; padding-top: 12px; }
 
     .inv-row {
       display: flex;
@@ -391,92 +389,196 @@
     }
     .toast.toast-error { background: var(--red); }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-    .settings-bar {
-      margin-top: 20px;
-      padding: 12px 16px;
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .status-indicator { font-size: 12px; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; }
-    .status-indicator.connected { color: var(--green); font-weight: 600; }
-    .modal-overlay {
-      position: fixed;
-      top:0; left:0; right:0; bottom:0;
-      background: rgba(0,0,0,0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-      padding: 20px;
-    }
-    .modal-box {
-      background: #fff;
-      max-width: 460px;
-      width: 100%;
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-    }
-    .modal-box h3 { margin-top:0; font-family: 'Oswald', sans-serif; }
-    .modal-box label { font-size:13px; display:block; margin:8px 0 4px; }
-    .modal-box input, .modal-box textarea {
-      width:100%;
-      padding:10px;
-      border:1px solid var(--line);
-      border-radius:6px;
-      font-size:14px;
-    }
-    .modal-box .modal-actions { display:flex; gap:10px; margin-top:16px; justify-content:flex-end; }
-    .modal-box .modal-actions button { padding:8px 18px; border:none; border-radius:6px; font-weight:600; cursor:pointer; }
-    .modal-box .modal-actions .btn-primary { background:var(--accent); color:#fff; }
-    .modal-box .modal-actions .btn-secondary { background:var(--paper); color:var(--ink); }
   </style>
 </head>
 <body>
-<div id="app"><div class="loading-msg">กำลังโหลด...</div></div>
+<div id="app"><div class="loading-msg">กำลังโหลดข้อมูล...</div></div>
+
 <script>
 // ====================================================================
-// 1. CONSTANTS & HELPERS
+// 1. CONFIGURATION & STATE
 // ====================================================================
+// วาง Web App URL จาก Google Apps Script ที่นี่
+const GOOGLE_SCRIPT_URL = 'วาง_GOOGLE_APPS_SCRIPT_URL_ที่นี่';
+
 const MODELS = ['D46H','D41H','578W'];
 const SIDES = ['LH','RH'];
 const STORAGE_PREFIX = 'jig_';
 
-function getKey(type, id) { return `${STORAGE_PREFIX}${type}:${id}`; }
+let state = {
+  tickets: [],
+  inventory: []
+};
 
-function loadAll(type) {
-  const result = [];
-  const prefix = getKey(type, '');
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith(prefix)) {
-      try { result.push(JSON.parse(localStorage.getItem(key))); }
-      catch(e) {}
+// โหลดจาก Local Storage สำรอง
+function loadLocal() {
+  try {
+    const rawTickets = localStorage.getItem(STORAGE_PREFIX + 'tickets');
+    const rawInv = localStorage.getItem(STORAGE_PREFIX + 'inventory');
+    state.tickets = rawTickets ? JSON.parse(rawTickets) : [];
+    state.inventory = rawInv ? JSON.parse(rawInv) : [];
+  } catch(e) {}
+}
+
+function saveLocal() {
+  try {
+    localStorage.setItem(STORAGE_PREFIX + 'tickets', JSON.stringify(state.tickets));
+    localStorage.setItem(STORAGE_PREFIX + 'inventory', JSON.stringify(state.inventory));
+  } catch(e) {}
+}
+
+loadLocal();
+
+// ====================================================================
+// 2. GOOGLE SHEETS SYNC (GET REQUEST - NO CORS ISSUE)
+// ====================================================================
+function syncToSheets() {
+  saveLocal();
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('วาง_GOOGLE_APPS_SCRIPT_URL')) return;
+  
+  const payload = encodeURIComponent(JSON.stringify(state));
+  const url = `${GOOGLE_SCRIPT_URL}?action=save&data=${payload}`;
+  
+  fetch(url, { method: 'GET', mode: 'no-cors' })
+    .then(() => console.log('Auto synced successfully'))
+    .catch(err => console.error('Sync failed:', err));
+}
+
+function fetchFromSheets(silent = false) {
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('วาง_GOOGLE_APPS_SCRIPT_URL')) {
+    route();
+    return;
+  }
+  if (!silent) showToast('🔄 กำลังดึงข้อมูลล่าสุด...');
+  
+  fetch(`${GOOGLE_SCRIPT_URL}?action=load`)
+    .then(res => res.json())
+    .then(res => {
+      if (res.success && res.data) {
+        state.tickets = res.data.tickets || [];
+        state.inventory = res.data.inventory || [];
+        saveLocal();
+        if (!silent) showToast('✅ อัปเดตข้อมูลสำเร็จ');
+        route();
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      if (!silent) showToast('❌ ดึงข้อมูลไม่สำเร็จ ใช้ข้อมูลล่าสุดในเครื่อง', 'error');
+      route();
+    });
+}
+
+// Auto Polling ทุกๆ 15 วินาที
+setInterval(() => {
+  fetchFromSheets(true);
+}, 15000);
+
+// ====================================================================
+// 3. BUSINESS LOGIC (SHARED DATA LAYER)
+// ====================================================================
+function getCurrentRole() {
+  const hash = location.hash.replace('#', '');
+  if (['overview', 'paint', 'maintenance'].includes(hash)) return hash;
+  return null;
+}
+
+function getInventory(model, side) {
+  const key = `${model}-${side}`;
+  const item = state.inventory.find(i => (i.id || `${i.model}-${i.side}`) === key);
+  return item ? item.total : 0;
+}
+
+function setInventory(model, side, total) {
+  const key = `${model}-${side}`;
+  const idx = state.inventory.findIndex(i => (i.id || `${i.model}-${i.side}`) === key);
+  const data = { id: key, model, side, total: Number(total), updatedAt: new Date().toISOString() };
+  if (idx >= 0) state.inventory[idx] = data;
+  else state.inventory.push(data);
+  syncToSheets();
+}
+
+function createTicket(model, side, kind, totalQty, note) {
+  const id = 'tk_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+  const now = new Date().toISOString();
+  const ticket = {
+    id, model, side, kind,
+    totalQty: Number(totalQty),
+    completedQty: 0,
+    remainingQty: Number(totalQty),
+    status: 'pending',
+    note: note || '',
+    createdAt: now,
+    updatedAt: now,
+    history: [{ action: 'created', timestamp: now }]
+  };
+  state.tickets.unshift(ticket);
+  syncToSheets();
+  return ticket;
+}
+
+function updateProgress(id, additionalQty) {
+  const ticket = state.tickets.find(t => t.id === id);
+  if (!ticket) return null;
+  const qty = Number(additionalQty);
+  if (qty <= 0) return ticket;
+  
+  const newCompleted = Math.min(ticket.totalQty, ticket.completedQty + qty);
+  const added = newCompleted - ticket.completedQty;
+  if (added === 0) return ticket;
+  
+  ticket.completedQty = newCompleted;
+  ticket.remainingQty = ticket.totalQty - ticket.completedQty;
+  ticket.status = ticket.remainingQty === 0 ? 'completed' : 'in_progress';
+  ticket.updatedAt = new Date().toISOString();
+  ticket.history.push({ action: 'progress', qty: added, timestamp: ticket.updatedAt });
+  syncToSheets();
+  return ticket;
+}
+
+function receiveTicket(id) {
+  const ticket = state.tickets.find(t => t.id === id);
+  if (!ticket || ticket.status !== 'completed') return null;
+  ticket.status = 'received';
+  ticket.updatedAt = new Date().toISOString();
+  ticket.history.push({ action: 'received', timestamp: ticket.updatedAt });
+  syncToSheets();
+  return ticket;
+}
+
+function getStats() {
+  const stats = { total: 0, pending: 0, in_progress: 0, completed: 0, received: 0, totalQty: 0, completedQty: 0, remainingQty: 0, ngPending: 0 };
+  for (const t of state.tickets) {
+    stats.total++;
+    if (t.status === 'pending') stats.pending++;
+    else if (t.status === 'in_progress') stats.in_progress++;
+    else if (t.status === 'completed') stats.completed++;
+    else if (t.status === 'received') stats.received++;
+    stats.totalQty += t.totalQty;
+    stats.completedQty += t.completedQty;
+    stats.remainingQty += t.remainingQty;
+    if (t.kind === 'ng' && t.status !== 'received') stats.ngPending += t.remainingQty;
+  }
+  return stats;
+}
+
+function getModelStats() {
+  const result = {};
+  for (const model of MODELS) {
+    result[model] = {};
+    for (const side of SIDES) {
+      const tickets = state.tickets.filter(t => t.model === model && t.side === side);
+      let totalQty = 0, completedQty = 0, remainingQty = 0, count = 0;
+      for (const t of tickets) {
+        totalQty += t.totalQty;
+        completedQty += t.completedQty;
+        remainingQty += t.remainingQty;
+        count++;
+      }
+      result[model][side] = { totalQty, completedQty, remainingQty, count };
     }
   }
   return result;
-}
-
-function loadOne(type, id) {
-  try { return JSON.parse(localStorage.getItem(getKey(type, id))); }
-  catch(e) { return null; }
-}
-
-function saveOne(type, id, data) {
-  localStorage.setItem(getKey(type, id), JSON.stringify(data));
-}
-
-function getCurrentRole() {
-  const hash = location.hash.replace('#', '');
-  if (hash === 'overview') return 'overview';
-  if (hash === 'paint') return 'paint';
-  if (hash === 'maintenance') return 'maintenance';
-  return null;
 }
 
 function escapeHtml(s) {
@@ -499,246 +601,7 @@ function showToast(msg, type) {
 }
 
 // ====================================================================
-// 2. BUSINESS LOGIC
-// ====================================================================
-function getTickets(role) {
-  const all = loadAll('ticket');
-  if (role === 'overview') return all;
-  return all.filter(t => t.role === role);
-}
-
-function getInventory(model, side) {
-  const key = `${model}-${side}`;
-  const data = loadOne('inventory', key);
-  return data ? data.total : 0;
-}
-
-function setInventory(model, side, total) {
-  const key = `${model}-${side}`;
-  saveOne('inventory', key, { total: Number(total), updatedAt: new Date().toISOString() });
-  syncToSheetsSilently();
-}
-
-function createTicket(role, model, side, kind, totalQty, note) {
-  const id = 'tk_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
-  const now = new Date().toISOString();
-  const ticket = {
-    id, model, side, kind, role,
-    totalQty: Number(totalQty),
-    completedQty: 0,
-    remainingQty: Number(totalQty),
-    status: 'pending',
-    note: note || '',
-    createdAt: now,
-    updatedAt: now,
-    createdBy: role,
-    history: [{ action: 'created', timestamp: now }]
-  };
-  saveOne('ticket', id, ticket);
-  syncToSheetsSilently();
-  return ticket;
-}
-
-function updateProgress(role, id, additionalQty) {
-  const ticket = loadOne('ticket', id);
-  if (!ticket) return null;
-  const qty = Number(additionalQty);
-  if (qty <= 0) return ticket;
-  const newCompleted = Math.min(ticket.totalQty, ticket.completedQty + qty);
-  const added = newCompleted - ticket.completedQty;
-  if (added === 0) return ticket;
-  ticket.completedQty = newCompleted;
-  ticket.remainingQty = ticket.totalQty - ticket.completedQty;
-  ticket.status = ticket.remainingQty === 0 ? 'completed' : 'in_progress';
-  ticket.updatedAt = new Date().toISOString();
-  ticket.history.push({ action: 'progress', qty: added, timestamp: ticket.updatedAt });
-  saveOne('ticket', id, ticket);
-  syncToSheetsSilently();
-  return ticket;
-}
-
-function receiveTicket(role, id) {
-  const ticket = loadOne('ticket', id);
-  if (!ticket || ticket.status !== 'completed') return null;
-  ticket.status = 'received';
-  ticket.updatedAt = new Date().toISOString();
-  ticket.history.push({ action: 'received', timestamp: ticket.updatedAt });
-  saveOne('ticket', id, ticket);
-  syncToSheetsSilently();
-  return ticket;
-}
-
-function getStats(role) {
-  const tickets = getTickets(role);
-  const stats = { total: 0, pending: 0, in_progress: 0, completed: 0, received: 0, totalQty: 0, completedQty: 0, remainingQty: 0, ngPending: 0 };
-  for (const t of tickets) {
-    stats.total++;
-    if (t.status === 'pending') stats.pending++;
-    else if (t.status === 'in_progress') stats.in_progress++;
-    else if (t.status === 'completed') stats.completed++;
-    else if (t.status === 'received') stats.received++;
-    stats.totalQty += t.totalQty;
-    stats.completedQty += t.completedQty;
-    stats.remainingQty += t.remainingQty;
-    if (t.kind === 'ng' && t.status !== 'received') stats.ngPending += t.remainingQty;
-  }
-  return stats;
-}
-
-function getModelStats(role) {
-  const result = {};
-  for (const model of MODELS) {
-    result[model] = {};
-    for (const side of SIDES) {
-      const tickets = getTickets(role).filter(t => t.model === model && t.side === side);
-      let totalQty = 0, completedQty = 0, remainingQty = 0, count = 0;
-      for (const t of tickets) {
-        totalQty += t.totalQty;
-        completedQty += t.completedQty;
-        remainingQty += t.remainingQty;
-        count++;
-      }
-      result[model][side] = { totalQty, completedQty, remainingQty, count };
-    }
-  }
-  return result;
-}
-
-// ====================================================================
-// 3. GOOGLE SHEETS SYNC ENGINE
-// ====================================================================
-function exportAllData() {
-  return { tickets: loadAll('ticket'), inventory: loadAll('inventory'), exportedAt: new Date().toISOString() };
-}
-
-function importAllData(data) {
-  if (!data) return;
-  const allTicketKeys = [];
-  const prefix = getKey('ticket', '');
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith(prefix)) allTicketKeys.push(key);
-  }
-  for (const k of allTicketKeys) localStorage.removeItem(k);
-
-  const allInvKeys = [];
-  const invPrefix = getKey('inventory', '');
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith(invPrefix)) allInvKeys.push(key);
-  }
-  for (const k of allInvKeys) localStorage.removeItem(k);
-
-  if (data.tickets) {
-    for (const t of data.tickets) saveOne('ticket', t.id, t);
-  }
-  if (data.inventory) {
-    for (const inv of data.inventory) {
-      const key = inv.id || `${inv.model}-${inv.side}`;
-      saveOne('inventory', key, inv);
-    }
-  }
-}
-
-function getScriptUrl() {
-  return localStorage.getItem('gsheets_script_url') || '';
-}
-
-function syncToSheetsSilently() {
-  const url = getScriptUrl();
-  if (!url) return;
-  const data = exportAllData();
-  const fullUrl = `${url}?action=save&data=${encodeURIComponent(JSON.stringify(data))}`;
-  
-  // ใช้ img/fetch beacon ป้องกันปัญหา CORS
-  fetch(fullUrl, { method: 'GET', mode: 'no-cors' })
-    .then(() => console.log('Auto-synced to Sheets successfully'))
-    .catch(err => console.error('Auto-sync failed:', err));
-}
-
-function fetchFromSheets(silent = false) {
-  const url = getScriptUrl();
-  if (!url) {
-    if (!silent) configureSheetsUrl();
-    return;
-  }
-  if (!silent) showToast('🔄 กำลังดึงข้อมูลล่าสุด...');
-  fetch(`${url}?action=load`)
-    .then(res => res.json())
-    .then(res => {
-      if (res.success && res.data) {
-        importAllData(res.data);
-        if (!silent) showToast('✅ อัปเดตข้อมูลสำเร็จ');
-        route();
-      }
-    })
-    .catch(err => {
-      if (!silent) showToast('❌ ไม่สามารถดึงข้อมูลได้: ' + err.message, 'error');
-    });
-}
-
-function configureSheetsUrl() {
-  const current = getScriptUrl();
-  showModal('ตั้งค่าการเชื่อมต่อ Google Sheets', [
-    { id: 'url', label: 'Google Apps Script Web App URL', value: current, placeholder: 'https://script.google.com/macros/s/.../exec' }
-  ], (data) => {
-    if (data.url) {
-      localStorage.setItem('gsheets_script_url', data.url.trim());
-      showToast('✅ บันทึก URL สำเร็จ กำลังดึงข้อมูล...');
-      fetchFromSheets();
-    }
-  });
-}
-
-// Auto Polling ทุก 20 วินาที
-setInterval(() => {
-  if (getScriptUrl()) fetchFromSheets(true);
-}, 20000);
-
-// ====================================================================
-// 4. MODAL & UI HELPERS
-// ====================================================================
-function showModal(title, fields, callback) {
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  let html = `<div class="modal-box"><h3>${escapeHtml(title)}</h3>`;
-  for (const f of fields) {
-    html += `<label>${escapeHtml(f.label)}</label>`;
-    html += `<input type="${f.type||'text'}" id="modal-${f.id}" value="${escapeHtml(f.value||'')}" placeholder="${escapeHtml(f.placeholder||'')}">`;
-  }
-  html += `<div class="modal-actions">
-    <button class="btn-secondary" data-action="modalCancel">ยกเลิก</button>
-    <button class="btn-primary" data-action="modalConfirm">ตกลง</button>
-  </div></div>`;
-  overlay.innerHTML = html;
-  document.body.appendChild(overlay);
-
-  overlay.querySelector('[data-action="modalCancel"]').addEventListener('click', () => overlay.remove());
-  overlay.querySelector('[data-action="modalConfirm"]').addEventListener('click', () => {
-    const data = {};
-    for (const f of fields) {
-      const el = document.getElementById(`modal-${f.id}`);
-      if (el) data[f.id] = el.value;
-    }
-    if (callback) callback(data);
-    overlay.remove();
-  });
-}
-
-function bottomSettingsBar() {
-  const hasUrl = Boolean(getScriptUrl());
-  return `
-    <div class="settings-bar">
-      <span class="status-indicator ${hasUrl ? 'connected' : ''}">
-        ${hasUrl ? '🟢 เชื่อมต่อ Google Sheets (Auto Sync On)' : '⚪ ยังไม่เชื่อมต่อ Google Sheets'}
-      </span>
-      <button class="save-btn small-btn" data-action="configSheets">⚙️ ตั้งค่าเชื่อมต่อ</button>
-    </div>
-  `;
-}
-
-// ====================================================================
-// 5. RENDER PAGES
+// 4. UI RENDER FUNCTIONS
 // ====================================================================
 let currentTab = { paint: 'send', maint: 'todo' };
 let paintForm = { model: MODELS[0], side: SIDES[0], qty: '', note: '' };
@@ -754,7 +617,7 @@ function renderHome() {
       <a class="role-card role-overview" href="#overview">
         <span class="role-tag">ภาพรวม</span>
         <h2>Overview Dashboard</h2>
-        <p>ดูข้อมูลทั้งหมดจากทุกฝ่าย</p>
+        <p>ดูข้อมูลสรุปทั้งหมด</p>
       </a>
       <a class="role-card role-paint" href="#paint">
         <span class="role-tag">ฝ่าย Paint</span>
@@ -764,18 +627,16 @@ function renderHome() {
       <a class="role-card role-maintenance" href="#maintenance">
         <span class="role-tag">ฝ่าย Maintenance</span>
         <h2>รายการที่ต้องทำ</h2>
-        <p>ดูและอัปเดตความคืบหน้า</p>
+        <p>ดูและอัปเดตงานที่ Paint ส่งมา</p>
       </a>
-      ${bottomSettingsBar()}
     </div>
   `;
   document.getElementById('app').innerHTML = html;
 }
 
 function renderOverview() {
-  const role = 'overview';
-  const stats = getStats(role);
-  const modelStats = getModelStats(role);
+  const stats = getStats();
+  const modelStats = getModelStats();
   
   let modelsHtml = '';
   for (const model of MODELS) {
@@ -785,12 +646,12 @@ function renderOverview() {
       const invTotal = getInventory(model, side);
       sidesHtml += `
         <div class="side-block">
-          <div class="side-label">${side === 'LH' ? 'LH (ซ้าย)' : 'RH (ขวา)'} — Jig ทั้งหมดในสต็อก: ${invTotal} ชิ้น</div>
+          <div class="side-label">${side === 'LH' ? 'LH (ซ้าย)' : 'RH (ขวา)'} — Jig ทั้งหมด: ${invTotal} ชิ้น</div>
           <div class="metrics5">
             <div class="metric"><span class="v">${s.totalQty}</span><span class="l">งานส่งซ่อม</span></div>
             <div class="metric"><span class="v">${s.completedQty}</span><span class="l">ทำแล้ว</span></div>
             <div class="metric"><span class="v">${s.remainingQty}</span><span class="l">คงเหลือ</span></div>
-            <div class="metric"><span class="v">${s.count}</span><span class="l">จำนวนรายการ</span></div>
+            <div class="metric"><span class="v">${s.count}</span><span class="l">จำนวนงาน</span></div>
           </div>
         </div>
       `;
@@ -802,13 +663,11 @@ function renderOverview() {
     <div class="role-header" style="background:#2C4356;">
       <div class="role-header-top">
         <button class="home-link" data-action="goHome">← เปลี่ยนมุมมอง</button>
-        <div class="header-actions">
-          <button class="refresh-pill" data-action="manualRefresh">↻ ดึงข้อมูลล่าสุด</button>
-        </div>
+        <button class="refresh-pill" data-action="refresh">↻ ดึงข้อมูลล่าสุด</button>
       </div>
       <p class="eyebrow">ภาพรวมทุกฝ่าย</p>
       <h1>Overview Dashboard</h1>
-      <p class="sync-note">ระบบอัปเดตข้อมูลอัตโนมัติทุก 20 วินาที</p>
+      <p class="sync-note">ระบบ Auto-Sync ข้อมูลทุก 15 วินาที</p>
     </div>
     <div class="content">
       <div class="overall-card">
@@ -822,28 +681,24 @@ function renderOverview() {
         </div>
       </div>
       ${modelsHtml}
-      ${bottomSettingsBar()}
     </div>
   `;
   document.getElementById('app').innerHTML = html;
 }
 
 function renderPaint() {
-  const role = 'paint';
-  const tickets = getTickets(role);
   const tab = currentTab.paint || 'send';
-  
   let tabContent = '';
-  if (tab === 'send') tabContent = renderPaintSend(role, tickets);
-  else if (tab === 'receive') tabContent = renderPaintReceive(role, tickets);
-  else if (tab === 'ng') tabContent = renderPaintNg(role, tickets);
-  else if (tab === 'settings') tabContent = renderPaintSettings(role);
+  if (tab === 'send') tabContent = renderPaintSend();
+  else if (tab === 'receive') tabContent = renderPaintReceive();
+  else if (tab === 'ng') tabContent = renderPaintNg();
+  else if (tab === 'settings') tabContent = renderPaintSettings();
   
   const html = `
     <div class="role-header" style="background:#B8451F;">
       <div class="role-header-top">
         <button class="home-link" data-action="goHome">← เปลี่ยนมุมมอง</button>
-        <button class="refresh-pill" data-action="manualRefresh">↻ ดึงข้อมูลล่าสุด</button>
+        <button class="refresh-pill" data-action="refresh">↻ ดึงข้อมูลล่าสุด</button>
       </div>
       <p class="eyebrow">ฝ่าย Paint</p>
       <h1>ส่งงาน · รับงานคืน</h1>
@@ -853,17 +708,16 @@ function renderPaint() {
         <button class="tab-btn ${tab==='send'?'active':''}" data-action="switchTab" data-tab="paint" data-tabvalue="send">ส่งงาน</button>
         <button class="tab-btn ${tab==='receive'?'active':''}" data-action="switchTab" data-tab="paint" data-tabvalue="receive">รับงานคืน</button>
         <button class="tab-btn ${tab==='ng'?'active':''}" data-action="switchTab" data-tab="paint" data-tabvalue="ng">ส่ง NG</button>
-        <button class="tab-btn ${tab==='settings'?'active':''}" data-action="switchTab" data-tab="paint" data-tabvalue="settings">จำนวน Jig ในสต็อก</button>
+        <button class="tab-btn ${tab==='settings'?'active':''}" data-action="switchTab" data-tab="paint" data-tabvalue="settings">จำนวน Jig</button>
       </div>
       ${tabContent}
-      ${bottomSettingsBar()}
     </div>
   `;
   document.getElementById('app').innerHTML = html;
 }
 
-function renderPaintSend(role, tickets) {
-  const openTickets = tickets.filter(t => t.status === 'pending' || t.status === 'in_progress');
+function renderPaintSend() {
+  const openTickets = state.tickets.filter(t => t.status === 'pending' || t.status === 'in_progress');
   return `
     <div class="form-card">
       <div class="selector-group"><label>เลือกรุ่น</label><div class="chip-row">
@@ -881,13 +735,13 @@ function renderPaintSend(role, tickets) {
       <button class="save-btn" data-action="doCreateTicket">ส่งงาน</button>
     </div>
     <h3 class="list-heading">งานที่รอความคืบหน้า (${openTickets.length})</h3>
-    ${openTickets.length ? openTickets.map(t => ticketCard(t, role)).join('') : '<div class="empty-note">ยังไม่มีงานค้าง</div>'}
+    ${openTickets.length ? openTickets.map(t => ticketCard(t)).join('') : '<div class="empty-note">ยังไม่มีงานค้าง</div>'}
   `;
 }
 
-function renderPaintReceive(role, tickets) {
-  const doneTickets = tickets.filter(t => t.status === 'completed');
-  const receivedTickets = tickets.filter(t => t.status === 'received');
+function renderPaintReceive() {
+  const doneTickets = state.tickets.filter(t => t.status === 'completed');
+  const receivedTickets = state.tickets.filter(t => t.status === 'received');
   return `
     <h3 class="list-heading">รอรับคืน (${doneTickets.length})</h3>
     ${doneTickets.length ? doneTickets.map(t => `
@@ -909,8 +763,8 @@ function renderPaintReceive(role, tickets) {
   `;
 }
 
-function renderPaintNg(role, tickets) {
-  const ngTickets = tickets.filter(t => t.kind === 'ng' && t.status !== 'received');
+function renderPaintNg() {
+  const ngTickets = state.tickets.filter(t => t.kind === 'ng' && t.status !== 'received');
   return `
     <div class="form-card">
       <div class="selector-group"><label>เลือกรุ่น</label><div class="chip-row">
@@ -932,7 +786,7 @@ function renderPaintNg(role, tickets) {
   `;
 }
 
-function renderPaintSettings(role) {
+function renderPaintSettings() {
   const rows = [];
   for (const model of MODELS) {
     for (const side of SIDES) {
@@ -954,19 +808,16 @@ function renderPaintSettings(role) {
 }
 
 function renderMaintenance() {
-  const role = 'maintenance';
-  const tickets = getTickets(role);
   const tab = currentTab.maint || 'todo';
-  
   let tabContent = '';
-  if (tab === 'todo') tabContent = renderMaintTodo(role, tickets);
-  else if (tab === 'history') tabContent = renderMaintHistory(role, tickets);
+  if (tab === 'todo') tabContent = renderMaintTodo();
+  else if (tab === 'history') tabContent = renderMaintHistory();
   
   const html = `
     <div class="role-header" style="background:#8F5F16;">
       <div class="role-header-top">
         <button class="home-link" data-action="goHome">← เปลี่ยนมุมมอง</button>
-        <button class="refresh-pill" data-action="manualRefresh">↻ ดึงข้อมูลล่าสุด</button>
+        <button class="refresh-pill" data-action="refresh">↻ ดึงข้อมูลล่าสุด</button>
       </div>
       <p class="eyebrow">ฝ่าย Maintenance</p>
       <h1>รายการที่ต้องทำ</h1>
@@ -977,15 +828,16 @@ function renderMaintenance() {
         <button class="tab-btn ${tab==='history'?'active':''}" data-action="switchTab" data-tab="maint" data-tabvalue="history">ประวัติ</button>
       </div>
       ${tabContent}
-      ${bottomSettingsBar()}
     </div>
   `;
   document.getElementById('app').innerHTML = html;
 }
 
-function renderMaintTodo(role, tickets) {
-  const todo = tickets.filter(t => t.status === 'pending' || t.status === 'in_progress');
+function renderMaintTodo() {
+  // ดึงงานทั้งหมดที่ยังทำไม่เสร็จ
+  const todo = state.tickets.filter(t => t.status === 'pending' || t.status === 'in_progress');
   if (!todo.length) return '<div class="empty-note">ไม่มีงานค้าง 🎉</div>';
+  
   return todo.map(t => {
     const pct = t.totalQty > 0 ? Math.round((t.completedQty / t.totalQty) * 100) : 0;
     return `
@@ -1002,7 +854,7 @@ function renderMaintTodo(role, tickets) {
           </div>
           ${t.note ? `<div class="tc-note">หมายเหตุ: ${escapeHtml(t.note)}</div>` : ''}
           <div class="tc-time">สร้าง ${fmtTime(t.createdAt)}</div>
-          <div class="edit-panel open">
+          <div class="edit-panel">
             <div class="field"><label>เพิ่มจำนวนที่ทำเสร็จ</label>
               <input type="number" min="1" max="${t.remainingQty}" id="maintQty-${t.id}" value="${Math.min(1, t.remainingQty)}">
             </div>
@@ -1014,8 +866,8 @@ function renderMaintTodo(role, tickets) {
   }).join('');
 }
 
-function renderMaintHistory(role, tickets) {
-  const hist = tickets.filter(t => t.status === 'completed' || t.status === 'received');
+function renderMaintHistory() {
+  const hist = state.tickets.filter(t => t.status === 'completed' || t.status === 'received');
   if (!hist.length) return '<div class="empty-note">ยังไม่มีประวัติ</div>';
   return hist.slice(0,30).map(t => ticketRow(t)).join('');
 }
@@ -1035,7 +887,7 @@ function ticketRow(t) {
   `;
 }
 
-function ticketCard(t, role) {
+function ticketCard(t) {
   const pct = t.totalQty > 0 ? Math.round((t.completedQty / t.totalQty) * 100) : 0;
   return `
     <div class="ticket-card ${t.kind === 'ng' ? 'ticket-ng' : ''}">
@@ -1057,7 +909,7 @@ function ticketCard(t, role) {
 }
 
 // ====================================================================
-// 6. ROUTER & EVENT LISTENERS
+// 5. ROUTER & EVENT LISTENERS
 // ====================================================================
 function goHome() { location.hash = 'home'; }
 
@@ -1074,10 +926,10 @@ function doCreateTicket() {
   const qty = parseInt(document.getElementById('paintQty').value);
   if (!qty || qty <= 0) { showToast('กรุณากรอกจำนวน', 'error'); return; }
   const note = document.getElementById('paintNote').value;
-  createTicket('paint', paintForm.model, paintForm.side, 'normal', qty, note);
+  createTicket(paintForm.model, paintForm.side, 'normal', qty, note);
   paintForm.qty = '';
   paintForm.note = '';
-  showToast('✅ ส่งงานเรียบร้อย (Sync แล้ว)');
+  showToast('✅ ส่งงานเรียบร้อย');
   route();
 }
 
@@ -1085,16 +937,16 @@ function doCreateNg() {
   const qty = parseInt(document.getElementById('ngQty').value);
   if (!qty || qty <= 0) { showToast('กรุณากรอกจำนวน', 'error'); return; }
   const note = document.getElementById('ngNote').value;
-  createTicket('paint', ngForm.model, ngForm.side, 'ng', qty, note);
+  createTicket(ngForm.model, ngForm.side, 'ng', qty, note);
   ngForm.qty = '';
   ngForm.note = '';
-  showToast('✅ ส่ง NG เรียบร้อย (Sync แล้ว)');
+  showToast('✅ ส่ง NG เรียบร้อย');
   route();
 }
 
 function doReceive(id) {
-  receiveTicket('paint', id);
-  showToast('✅ รับงานคืนเรียบร้อย (Sync แล้ว)');
+  receiveTicket(id);
+  showToast('✅ รับงานคืนเรียบร้อย');
   route();
 }
 
@@ -1102,8 +954,8 @@ function doUpdateProgress(id) {
   const qtyInput = document.getElementById(`maintQty-${id}`);
   const qty = parseInt(qtyInput.value);
   if (!qty || qty <= 0) { showToast('กรุณากรอกจำนวนที่ทำเพิ่ม', 'error'); return; }
-  updateProgress('maintenance', id, qty);
-  showToast(`✅ อัปเดต +${qty} ชิ้น เรียบร้อย (Sync แล้ว)`);
+  updateProgress(id, qty);
+  showToast(`✅ อัปเดต +${qty} ชิ้น เรียบร้อย`);
   route();
 }
 
@@ -1113,7 +965,7 @@ function doSetInventory(model, side) {
   const val = parseInt(input.value);
   if (isNaN(val) || val < 0) { showToast('กรุณากรอกตัวเลขที่ถูกต้อง', 'error'); return; }
   setInventory(model, side, val);
-  showToast('✅ บันทึกจำนวน Jig ในสต็อกแล้ว');
+  showToast('✅ บันทึกจำนวน Jig แล้ว');
   route();
 }
 
@@ -1153,8 +1005,7 @@ document.addEventListener('click', function(e) {
   const tabvalue = el.dataset.tabvalue;
 
   if (action === 'goHome') goHome();
-  if (action === 'manualRefresh') fetchFromSheets();
-  if (action === 'configSheets') configureSheetsUrl();
+  if (action === 'refresh') fetchFromSheets();
   if (action === 'switchTab') switchTab(tab, tabvalue);
   if (action === 'setPaintField') setPaintField(field, value);
   if (action === 'setNgField') setNgField(field, value);
@@ -1166,12 +1017,9 @@ document.addEventListener('click', function(e) {
 });
 
 window.addEventListener('hashchange', route);
-route();
 
-// โหลดข้อมูลล่าสุดทันทีที่เปิดหน้าเว็บ
-if (getScriptUrl()) {
-  fetchFromSheets(true);
-}
+// เริ่มต้นดึงข้อมูลทันทีเมื่อเปิดหน้า
+fetchFromSheets(true);
 </script>
 </body>
 </html>
