@@ -398,8 +398,7 @@
 // ====================================================================
 // 1. CONFIGURATION & STATE
 // ====================================================================
-// วาง Web App URL จาก Google Apps Script ที่นี่
-const GOOGLE_SCRIPT_URL = 'วาง_GOOGLE_APPS_SCRIPT_URL_ที่นี่';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxzZVa5QrWJdHCzv7vy4IEb53RMwu2ekdg1RpkiMs5svcAWiLQ0au-ulCxVjlWNNpCk/exec';
 
 const MODELS = ['D46H','D41H','578W'];
 const SIDES = ['LH','RH'];
@@ -410,7 +409,6 @@ let state = {
   inventory: []
 };
 
-// โหลดจาก Local Storage สำรอง
 function loadLocal() {
   try {
     const rawTickets = localStorage.getItem(STORAGE_PREFIX + 'tickets');
@@ -430,11 +428,11 @@ function saveLocal() {
 loadLocal();
 
 // ====================================================================
-// 2. GOOGLE SHEETS SYNC (GET REQUEST - NO CORS ISSUE)
+// 2. GOOGLE SHEETS SYNC (GET REQUEST - NO CORS)
 // ====================================================================
 function syncToSheets() {
   saveLocal();
-  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('วาง_GOOGLE_APPS_SCRIPT_URL')) return;
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('ใส่_URL_GOOGLE_APPS_SCRIPT')) return;
   
   const payload = encodeURIComponent(JSON.stringify(state));
   const url = `${GOOGLE_SCRIPT_URL}?action=save&data=${payload}`;
@@ -445,7 +443,7 @@ function syncToSheets() {
 }
 
 function fetchFromSheets(silent = false) {
-  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('วาง_GOOGLE_APPS_SCRIPT_URL')) {
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('ใส่_URL_GOOGLE_APPS_SCRIPT')) {
     route();
     return;
   }
@@ -464,7 +462,7 @@ function fetchFromSheets(silent = false) {
     })
     .catch(err => {
       console.error(err);
-      if (!silent) showToast('❌ ดึงข้อมูลไม่สำเร็จ ใช้ข้อมูลล่าสุดในเครื่อง', 'error');
+      if (!silent) showToast('❌ ไม่สามารถดึงข้อมูลได้', 'error');
       route();
     });
 }
@@ -646,7 +644,7 @@ function renderOverview() {
       const invTotal = getInventory(model, side);
       sidesHtml += `
         <div class="side-block">
-          <div class="side-label">${side === 'LH' ? 'LH (ซ้าย)' : 'RH (ขวา)'} — Jig ทั้งหมด: ${invTotal} ชิ้น</div>
+          <div class="side-label">${side === 'LH' ? 'LH (ซ้าย)' : 'RH (ขวา)'} — Jig ทั้งหมดในสต็อก: ${invTotal} ชิ้น</div>
           <div class="metrics5">
             <div class="metric"><span class="v">${s.totalQty}</span><span class="l">งานส่งซ่อม</span></div>
             <div class="metric"><span class="v">${s.completedQty}</span><span class="l">ทำแล้ว</span></div>
@@ -834,7 +832,6 @@ function renderMaintenance() {
 }
 
 function renderMaintTodo() {
-  // ดึงงานทั้งหมดที่ยังทำไม่เสร็จ
   const todo = state.tickets.filter(t => t.status === 'pending' || t.status === 'in_progress');
   if (!todo.length) return '<div class="empty-note">ไม่มีงานค้าง 🎉</div>';
   
@@ -1017,8 +1014,6 @@ document.addEventListener('click', function(e) {
 });
 
 window.addEventListener('hashchange', route);
-
-// เริ่มต้นดึงข้อมูลทันทีเมื่อเปิดหน้า
 fetchFromSheets(true);
 </script>
 </body>
