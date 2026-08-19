@@ -3,252 +3,79 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-  <title>Jig Tracker v3 — Modern & Auto-Sync</title>
+  <title>Jig Tracker v4 — Consolidated & Dashboard Pro</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      /* Modern Color Palette */
-      --bg: #F1F5F9;
-      --card: #FFFFFF;
-      --ink: #0F172A;
-      --ink-soft: #64748B;
-      --line: #E2E8F0;
-      
-      /* Primary Accents */
-      --accent: #4F46E5; /* Indigo */
-      --accent-hover: #4338CA;
-      --accent-paint: #E11D48; /* Rose */
-      --accent-maint: #D97706; /* Amber */
-      
-      --green: #10B981;
-      --green-bg: #D1FAE5;
-      --red: #EF4444;
-      --red-bg: #FEE2E2;
-      
-      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-      --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-      --radius: 12px;
-      --radius-sm: 8px;
+      --bg: #F1F5F9; --card: #FFFFFF; --ink: #0F172A; --ink-soft: #64748B; --line: #E2E8F0;
+      --accent: #4F46E5; --accent-paint: #E11D48; --accent-maint: #D97706;
+      --green: #10B981; --red: #EF4444;
+      --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05); --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+      --radius: 12px; --radius-sm: 8px;
     }
-    
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--ink);
-      font-family: 'Inter', system-ui, sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
+    body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Inter', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
     .app-root { max-width: 800px; margin: 0 auto; padding-bottom: 60px; }
+    .eyebrow { font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: #94A3B8; margin: 0 0 6px; }
     
-    /* Headers & Typography */
-    .eyebrow {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 12px;
-      letter-spacing: .1em;
-      text-transform: uppercase;
-      color: #94A3B8;
-      margin: 0 0 6px;
-    }
-    
-    /* Home Screen */
     .home-wrap { padding: 40px 20px 20px; max-width: 600px; margin: 0 auto; }
     .home-head { text-align: center; margin-bottom: 32px; }
     .home-head h1 { font-family: 'Oswald', sans-serif; font-size: 28px; margin: 0; color: var(--ink); }
-    
-    .role-card {
-      display: block;
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-left: 8px solid var(--card-accent, var(--accent));
-      border-radius: var(--radius);
-      padding: 20px;
-      margin-bottom: 16px;
-      text-decoration: none;
-      color: var(--ink);
-      box-shadow: var(--shadow-sm);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .role-card:active, .role-card:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
-    }
-    .role-card.role-overview { --card-accent: var(--accent); }
-    .role-card.role-paint { --card-accent: var(--accent-paint); }
-    .role-card.role-maintenance { --card-accent: var(--accent-maint); }
-    
-    .role-tag {
-      display: inline-block;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: .05em;
-      color: #fff;
-      background: var(--card-accent);
-      padding: 4px 10px;
-      border-radius: 20px;
-      margin-bottom: 10px;
-    }
+    .role-card { display: block; background: var(--card); border-left: 8px solid var(--card-accent, var(--accent)); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; text-decoration: none; color: var(--ink); box-shadow: var(--shadow-sm); }
+    .role-card.role-overview { --card-accent: var(--accent); } .role-card.role-paint { --card-accent: var(--accent-paint); } .role-card.role-maintenance { --card-accent: var(--accent-maint); }
+    .role-tag { display: inline-block; font-size: 11px; font-weight: 700; color: #fff; background: var(--card-accent); padding: 4px 10px; border-radius: 20px; margin-bottom: 10px; }
     .role-card h2 { font-family: 'Oswald', sans-serif; font-size: 20px; margin: 0 0 6px; }
     .role-card p { margin: 0; font-size: 14px; color: var(--ink-soft); }
 
-    /* Role Headers (Gradient Modern Look) */
-    .role-header {
-      color: #FFF;
-      padding: 24px 20px;
-      border-bottom-left-radius: 24px;
-      border-bottom-right-radius: 24px;
-      box-shadow: var(--shadow-md);
-      margin-bottom: 20px;
-    }
-    .bg-overview { background: linear-gradient(135deg, #1E293B, #0F172A); }
-    .bg-paint { background: linear-gradient(135deg, #BE123C, #881337); }
-    .bg-maintenance { background: linear-gradient(135deg, #B45309, #78350F); }
-    
+    .role-header { color: #FFF; padding: 24px 20px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; box-shadow: var(--shadow-md); margin-bottom: 20px; }
+    .bg-overview { background: linear-gradient(135deg, #1E293B, #0F172A); } .bg-paint { background: linear-gradient(135deg, #BE123C, #881337); } .bg-maintenance { background: linear-gradient(135deg, #B45309, #78350F); }
     .role-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    .home-link { color: rgba(255,255,255,0.8); font-size: 13px; font-weight: 600; text-decoration: none; background: none; border: none; padding: 0; cursor: pointer; }
-    .refresh-pill {
-      background: rgba(255,255,255,0.15);
-      border: 1px solid rgba(255,255,255,0.2);
-      color: #fff;
-      border-radius: 20px;
-      padding: 6px 14px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      backdrop-filter: blur(4px);
-    }
+    .home-link, .refresh-pill { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 20px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; }
     .role-header h1 { font-family: 'Oswald', sans-serif; font-size: 24px; margin: 0; letter-spacing: 0.5px; }
 
     .content { padding: 0 16px; max-width: 800px; margin: 0 auto; }
-
-    /* Tabs */
-    .tabs {
-      display: flex;
-      background: var(--line);
-      border-radius: var(--radius-sm);
-      padding: 4px;
-      margin-bottom: 20px;
-    }
-    .tab-btn {
-      flex: 1;
-      padding: 10px;
-      background: transparent;
-      border: none;
-      border-radius: 6px;
-      font-family: 'Inter', sans-serif;
-      font-weight: 600;
-      font-size: 13px;
-      color: var(--ink-soft);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
+    .tabs { display: flex; background: var(--line); border-radius: var(--radius-sm); padding: 4px; margin-bottom: 20px; }
+    .tab-btn { flex: 1; padding: 10px; background: transparent; border: none; border-radius: 6px; font-weight: 600; font-size: 13px; color: var(--ink-soft); cursor: pointer; transition: all 0.2s; }
     .tab-btn.active { background: var(--card); color: var(--accent); box-shadow: var(--shadow-sm); }
 
-    /* Cards & Forms */
-    .form-card, .model-card, .ticket-card, .overall-card {
-      background: var(--card);
-      border-radius: var(--radius);
-      padding: 16px;
-      margin-bottom: 16px;
-      box-shadow: var(--shadow-sm);
-      border: 1px solid var(--line);
-    }
-    .overall-card { background: var(--ink); color: #fff; border: none; }
-    .overall-title { font-family: 'Oswald', sans-serif; color: #94A3B8; font-size: 14px; text-transform: uppercase; margin-bottom: 12px; }
+    .form-card, .model-card { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--line); }
     
-    .metrics5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .overall-card { background: var(--ink); color: #fff; border: none; border-radius: var(--radius); padding: 16px; margin-bottom: 16px; }
+    .overall-title { font-family: 'Oswald', sans-serif; color: #94A3B8; font-size: 14px; text-transform: uppercase; margin-bottom: 12px; }
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
     .metric { text-align: center; background: var(--bg); border-radius: var(--radius-sm); padding: 10px 4px; border: 1px solid var(--line); }
     .overall-card .metric { background: rgba(255,255,255,0.1); border: none; }
     .overall-card .metric .l { color: #CBD5E1; }
     .metric .v { font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-weight: 700; display: block; margin-bottom: 2px; }
-    .metric .l { font-size: 9px; color: var(--ink-soft); text-transform: uppercase; }
-    .metric-ng .v { color: var(--red); }
-
-    .selector-group label, .field label { display: block; font-size: 12px; font-weight: 600; color: var(--ink-soft); margin-bottom: 8px; }
+    .metric .l { font-size: 10px; color: var(--ink-soft); }
+    
+    /* สไตล์พิเศษสำหรับ Dashboard ให้ตัวหนังสือใหญ่ชัดเจน */
+    .dash-stock { font-family: 'IBM Plex Mono', monospace; font-size: 26px; font-weight: 700; color: var(--accent); line-height: 1; }
+    .dash-pct { font-size: 14px; font-weight: 600; color: var(--green); margin-top: 4px; display:inline-block; }
+    .progress-bg { height: 10px; background: var(--line); border-radius: 5px; margin-top: 8px; overflow: hidden; width: 100%; }
+    .progress-fill { height: 100%; background: var(--accent); border-radius: 5px; transition: width 0.3s; }
+    
     .chip-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-    .chip {
-      padding: 8px 16px;
-      border: 1px solid var(--line);
-      background: var(--bg);
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--ink-soft);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
+    .chip { padding: 8px 16px; border: 1px solid var(--line); background: var(--bg); border-radius: 20px; font-size: 14px; font-weight: 600; color: var(--ink-soft); cursor: pointer; }
     .chip-active { background: var(--accent); border-color: var(--accent); color: #fff; }
-    
-    .field input {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius-sm);
-      font-family: 'Inter', sans-serif;
-      font-size: 15px;
-      background: #F8FAFC;
-      margin-bottom: 16px;
-    }
-    .field input:focus { outline: 2px solid var(--accent); background: #fff; }
-    
-    .save-btn {
-      width: 100%;
-      padding: 14px;
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: var(--radius-sm);
-      font-weight: 700;
-      font-size: 15px;
-      cursor: pointer;
-      box-shadow: var(--shadow-sm);
-    }
-    .save-btn:active { transform: translateY(1px); }
+    .field label { display: block; font-size: 12px; font-weight: 600; color: var(--ink-soft); margin-bottom: 8px; }
+    .field input { width: 100%; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); font-size: 15px; margin-bottom: 16px; }
+    .save-btn { width: 100%; padding: 14px; background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm); font-weight: 700; font-size: 15px; cursor: pointer; }
     .ng-btn { background: var(--red); }
     
-    /* Tickets */
-    .list-heading { font-family: 'Oswald', sans-serif; font-size: 16px; color: var(--ink); margin: 24px 0 12px; text-transform: uppercase; }
-    .ticket-card { border-left: 6px solid var(--accent); overflow: hidden; }
-    .ticket-card.ticket-ng { border-left-color: var(--red); }
-    .tc-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .tc-model { font-family: 'Oswald', sans-serif; font-size: 18px; font-weight: 600; }
-    .tr-side { color: var(--ink-soft); font-size: 13px; font-family: 'Inter', sans-serif; }
-    .tc-qty { font-family: 'IBM Plex Mono', monospace; font-size: 15px; margin-bottom: 6px; font-weight: 600; }
-    .tc-note { font-size: 13px; color: var(--ink-soft); margin-bottom: 6px; }
-    .tc-progress { height: 8px; background: var(--line); border-radius: 4px; margin: 12px 0; overflow: hidden; }
-    .tc-progress-bar { height: 100%; background: var(--accent); border-radius: 4px; transition: width 0.3s; }
-    .tc-progress-bar.done { background: var(--green); }
-    
-    .edit-panel { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 16px; }
-    
-    /* Status Badge */
-    .status-badge {
-      font-size: 11px;
-      font-weight: 700;
-      padding: 4px 8px;
-      border-radius: 6px;
-      background: var(--line);
-      color: var(--ink);
-    }
-    
-    .toast {
-      position: fixed;
-      left: 50%;
-      bottom: 24px;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--ink);
-      color: #fff;
-      padding: 12px 24px;
-      border-radius: 30px;
-      font-size: 14px;
-      font-weight: 600;
-      opacity: 0;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      z-index: 50;
-      box-shadow: var(--shadow-md);
-    }
+    /* Consolidated Card */
+    .cons-card { border-left: 6px solid var(--accent); background: #fff; border-radius: var(--radius-sm); padding: 16px; margin-bottom: 12px; box-shadow: var(--shadow-sm); border: 1px solid var(--line); }
+    .cons-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .cons-title { font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 700; }
+    .cons-sub { color: var(--ink-soft); font-size: 14px; font-weight: 500; }
+    .cons-stat-row { display: flex; justify-content: space-between; background: var(--bg); padding: 10px; border-radius: 6px; margin-bottom: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 14px; }
+    .cons-stat-row span { font-weight: 600; }
+    .highlight-red { color: var(--red); font-size: 16px;}
+    .highlight-green { color: var(--green); font-size: 16px;}
+
+    .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); background: var(--ink); color: #fff; padding: 12px 24px; border-radius: 30px; font-size: 14px; font-weight: 600; opacity: 0; transition: all 0.3s; z-index: 50; }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   </style>
 </head>
@@ -259,217 +86,233 @@
 // ====================================================================
 // 1. CONFIGURATION
 // ====================================================================
-// 👉 วาง URL ของ Google Apps Script ที่ได้มาใหม่ตรงนี้
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz00Dy9UaK0xoperphivFXJWeRP3RcmUjVduH1UZwGYEoHbPn3OyDUQHpZgYOu732TT/exec';
+// 👉 วาง URL ของ Google Apps Script ที่ Deploy ใหม่ตรงนี้
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwz0av_rml7sz0q55TCJJSiXLGfx8FzDWklr5NsofYwkwqmzTxKZBITyAY6hKd3D54s/exec';
 
 const MODELS = ['D46H','D41H','578W'];
 const SIDES = ['LH','RH'];
+// เพิ่มฟิลด์ receivedQty เพื่อรองรับการรับคืนแบบ Partial (FIFO)
 let state = { tickets: [], inventory: [] };
 
 // ====================================================================
-// 2. DATA LAYER & SYNC (POST text/plain Bypass CORS)
+// 2. DATA LAYER (Auto-Sync)
 // ====================================================================
 function loadLocal() {
   try {
-    const rawT = localStorage.getItem('jig_tickets');
-    const rawI = localStorage.getItem('jig_inventory');
+    const rawT = localStorage.getItem('jig_tickets_v4');
+    const rawI = localStorage.getItem('jig_inventory_v4');
     if (rawT) state.tickets = JSON.parse(rawT);
     if (rawI) state.inventory = JSON.parse(rawI);
   } catch(e) {}
 }
 
 function saveLocal() {
-  localStorage.setItem('jig_tickets', JSON.stringify(state.tickets));
-  localStorage.setItem('jig_inventory', JSON.stringify(state.inventory));
+  localStorage.setItem('jig_tickets_v4', JSON.stringify(state.tickets));
+  localStorage.setItem('jig_inventory_v4', JSON.stringify(state.inventory));
 }
 
 function syncToSheets() {
-  saveLocal(); // เซฟลงเครื่องก่อนเสมอ
+  saveLocal();
   if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('ใส่_URL')) return;
-  
-  // ใช้ POST แบบ text/plain จะไม่ถูกเบราว์เซอร์บล็อก (No CORS Preflight)
-  const payload = JSON.stringify({ action: 'save', data: state });
-  
   fetch(GOOGLE_SCRIPT_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: payload
-  })
-  .then(() => console.log('✅ Cloud Synced'))
-  .catch(err => console.error('Sync Error:', err));
+    body: JSON.stringify({ action: 'save', data: state })
+  }).then(() => console.log('Synced')).catch(err => console.error(err));
 }
 
 function fetchFromSheets(silent = false) {
-  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('ใส่_URL')) {
-    route(); return;
-  }
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('ใส่_URL')) { route(); return; }
   if (!silent) showToast('🔄 กำลังเชื่อมต่อฐานข้อมูล...');
-  
   fetch(GOOGLE_SCRIPT_URL + "?action=load")
     .then(res => res.json())
     .then(res => {
       if (res.success && res.data) {
-        // อัปเดต State ถ้าคลาวด์มีข้อมูล หรือเก็บค่าเดิมไว้ถ้าคลาวด์ว่างเปล่า
-        if(res.data.tickets && res.data.tickets.length > 0) state.tickets = res.data.tickets;
-        if(res.data.inventory && res.data.inventory.length > 0) state.inventory = res.data.inventory;
+        if(res.data.tickets) state.tickets = res.data.tickets;
+        if(res.data.inventory) state.inventory = res.data.inventory;
+        // Migration field for old data
+        state.tickets.forEach(t => { if(t.receivedQty === undefined) t.receivedQty = (t.status === 'received' ? t.completedQty : 0); });
         saveLocal();
         if (!silent) showToast('✅ อัปเดตข้อมูลสำเร็จ');
-        route(); // รีเฟรชหน้าจอ
+        route();
       }
-    })
-    .catch(err => {
-      console.warn('Offline mode:', err);
-      if (!silent) showToast('⚠️ ดึงข้อมูลไม่ได้ กำลังใช้ข้อมูลในเครื่อง');
-      route(); // ให้แสดงผลข้อมูลที่มีในเครื่องแทน
-    });
+    }).catch(err => { if (!silent) showToast('⚠️ ใช้งาน Offline Mode'); route(); });
 }
 
-// Auto Polling ทุกๆ 20 วินาที เฉพาะดึงข้อมูล (ไม่ให้รบกวนการพิมพ์)
-setInterval(() => {
-  fetchFromSheets(true);
-}, 20000);
+setInterval(() => { fetchFromSheets(true); }, 15000);
 
 // ====================================================================
-// 3. AUTO-ROUTING LOGIC
+// 3. CORE LOGIC (CONSOLIDATED / FIFO)
 // ====================================================================
 function initRoute() {
   loadLocal();
-  // ถ้าไม่มี Hash ยืนยัน และเปิดผ่านจอใหญ่ (PC) ให้เด้งไป Dashboard เลย
   if (!window.location.hash) {
-    if (window.innerWidth > 768) {
-      window.location.hash = 'overview';
-    } else {
-      window.location.hash = 'home';
-    }
+    window.location.hash = window.innerWidth > 768 ? 'overview' : 'home';
   }
-  fetchFromSheets(true); // โหลดครั้งแรก
+  fetchFromSheets(true);
 }
 
-// ====================================================================
-// 4. BUSINESS LOGIC (เหมือนเดิม)
-// ====================================================================
 function getInventory(m, s) {
-  const k = `${m}-${s}`;
-  const item = state.inventory.find(i => (i.id || `${i.model}-${i.side}`) === k);
+  const item = state.inventory.find(i => i.model === m && i.side === s);
   return item ? item.total : 0;
 }
-function setInventory(model, side, total) {
-  const k = `${model}-${side}`;
-  const idx = state.inventory.findIndex(i => (i.id || `${i.model}-${i.side}`) === k);
-  const data = { id: k, model, side, total: Number(total), updatedAt: new Date().toISOString() };
+function setInventory(m, s, total) {
+  const idx = state.inventory.findIndex(i => i.model === m && i.side === s);
+  const data = { model: m, side: s, total: Number(total) };
   if (idx >= 0) state.inventory[idx] = data; else state.inventory.push(data);
   syncToSheets();
 }
+
 function createTicket(model, side, kind, totalQty, note) {
-  const ticket = {
+  state.tickets.push({
     id: 'tk_' + Date.now(), model, side, kind,
-    totalQty: Number(totalQty), completedQty: 0, remainingQty: Number(totalQty),
+    totalQty: Number(totalQty), completedQty: 0, receivedQty: 0,
     status: 'pending', note: note || '',
-    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
-  };
-  state.tickets.unshift(ticket);
-  syncToSheets();
-}
-function updateProgress(id, addQty) {
-  const t = state.tickets.find(x => x.id === id);
-  if (!t) return;
-  const qty = Number(addQty);
-  if (qty <= 0) return;
-  
-  t.completedQty = Math.min(t.totalQty, t.completedQty + qty);
-  t.remainingQty = t.totalQty - t.completedQty;
-  t.status = t.remainingQty === 0 ? 'completed' : 'in_progress';
-  t.updatedAt = new Date().toISOString();
-  syncToSheets();
-}
-function receiveTicket(id) {
-  const t = state.tickets.find(x => x.id === id);
-  if (t && t.status === 'completed') {
-    t.status = 'received';
-    t.updatedAt = new Date().toISOString();
-    syncToSheets();
-  }
-}
-function getStats() {
-  const s = { totalQty: 0, completedQty: 0, remainingQty: 0, pending: 0, ngPending: 0 };
-  state.tickets.forEach(t => {
-    if (t.status === 'pending') s.pending++;
-    s.totalQty += t.totalQty;
-    s.completedQty += t.completedQty;
-    s.remainingQty += t.remainingQty;
-    if (t.kind === 'ng' && t.status !== 'received') s.ngPending += t.remainingQty;
+    createdAt: new Date().toISOString()
   });
-  return s;
+  syncToSheets();
+}
+
+// ลอจิก FIFO: Maintenance กรอกยอดรวม จะไปหักบิลเก่าสุดที่ค้างอยู่
+window.submitProgressFIFO = function(m, s) {
+  const input = document.getElementById(`mqty_${m}_${s}`);
+  let applyQty = parseInt(input.value);
+  if(!applyQty || applyQty <= 0) { showToast('กรุณากรอกจำนวน'); return; }
+  
+  // เรียงบิลเก่าไปใหม่ ที่ยังซ่อมไม่เสร็จ
+  let pendingTickets = state.tickets.filter(t => t.model === m && t.side === s && t.completedQty < t.totalQty)
+                                    .sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+  
+  for(let t of pendingTickets) {
+    if(applyQty <= 0) break;
+    let space = t.totalQty - t.completedQty;
+    let fill = Math.min(space, applyQty);
+    t.completedQty += fill;
+    applyQty -= fill;
+    if(t.completedQty > 0 && t.completedQty < t.totalQty) t.status = 'in_progress';
+    if(t.completedQty === t.totalQty && t.receivedQty < t.totalQty) t.status = 'completed';
+  }
+  showToast('✅ อัปเดตยอดซ่อมสำเร็จ');
+  syncToSheets();
+  route();
+};
+
+// ลอจิก FIFO: Paint กรอกยอดรับคืน จะไปหักจากบิลที่ซ่อมเสร็จ(หรือเสร็จบางส่วน)แล้วแต่ยังรับไม่ครบ
+window.submitReceiveFIFO = function(m, s) {
+  const input = document.getElementById(`rqty_${m}_${s}`);
+  let applyQty = parseInt(input.value);
+  if(!applyQty || applyQty <= 0) { showToast('กรุณากรอกจำนวน'); return; }
+
+  let readyTickets = state.tickets.filter(t => t.model === m && t.side === s && t.receivedQty < t.completedQty)
+                                  .sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+  
+  for(let t of readyTickets) {
+    if(applyQty <= 0) break;
+    let space = t.completedQty - t.receivedQty;
+    let take = Math.min(space, applyQty);
+    t.receivedQty += take;
+    applyQty -= take;
+    if(t.receivedQty === t.totalQty) t.status = 'received';
+  }
+  showToast('✅ รับคืนเข้าระบบสำเร็จ');
+  syncToSheets();
+  route();
+};
+
+function getConsolidatedStats(m, s) {
+  let ts = state.tickets.filter(t => t.model === m && t.side === s);
+  let sent = 0, done = 0, rec = 0, ng = 0;
+  ts.forEach(t => {
+    sent += t.totalQty; done += t.completedQty; rec += (t.receivedQty||0);
+    if(t.kind === 'ng' && t.completedQty < t.totalQty) ng += (t.totalQty - t.completedQty);
+  });
+  return { 
+    sent, done, rec, 
+    pendingMaint: sent - done, // ค้างซ่อม
+    readyForPaint: done - rec, // รอรับคืน
+    ngPending: ng
+  };
 }
 
 // ====================================================================
-// 5. UI COMPONENTS
+// 4. UI COMPONENTS
 // ====================================================================
 function showToast(msg) {
-  const t = document.createElement('div');
-  t.className = 'toast show';
-  t.textContent = msg;
+  const t = document.createElement('div'); t.className = 'toast show'; t.textContent = msg;
   document.body.appendChild(t);
   setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 2500);
 }
-function fmtTime(iso) {
-  if (!iso) return '';
-  return new Date(iso).toLocaleString('th-TH', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
-}
 
-// ====================================================================
-// 6. RENDERERS
-// ====================================================================
 let uiState = { paintTab: 'send', maintTab: 'todo', form: { model: MODELS[0], side: SIDES[0] } };
+
+window.route = function() {
+  const hash = window.location.hash;
+  if(hash === '#paint') renderPaint();
+  else if(hash === '#maintenance') renderMaint();
+  else if(hash === '#overview') renderOverview();
+  else renderHome();
+};
 
 function renderHome() {
   document.getElementById('app').innerHTML = `
     <div class="home-wrap">
       <div class="home-head">
         <p class="eyebrow">Digital Factory Hub</p>
-        <h1>เลือกแผนกการทำงาน</h1>
+        <h1>ระบบติดตามสถานะซ่อม Jig</h1>
       </div>
       <a class="role-card role-overview" href="#overview">
-        <span class="role-tag">Management</span>
-        <h2>ภาพรวม / Dashboard</h2>
-        <p>สำหรับหัวหน้างานดูสรุปข้อมูลเรียลไทม์</p>
+        <span class="role-tag">Management</span><h2>ภาพรวม / Dashboard</h2><p>ดูสรุปข้อมูลเปอร์เซ็นต์และยอดค้างสะสม</p>
       </a>
       <a class="role-card role-paint" href="#paint">
-        <span class="role-tag">Production</span>
-        <h2>ฝ่าย Paint (พ่นสี)</h2>
-        <p>สร้างรายการส่งซ่อม / รับงานคืนจากช่าง</p>
+        <span class="role-tag">Production</span><h2>ฝ่าย Paint (พ่นสี)</h2><p>ส่งงานซ่อม / รับงานคืน</p>
       </a>
       <a class="role-card role-maintenance" href="#maintenance">
-        <span class="role-tag">Support</span>
-        <h2>ฝ่าย Maintenance (ซ่อมบำรุง)</h2>
-        <p>ดูรายการที่ต้องทำและอัปเดตความคืบหน้า</p>
+        <span class="role-tag">Support</span><h2>ฝ่าย Maintenance</h2><p>อัปเดตยอดซ่อมแบบรวมรุ่น</p>
       </a>
     </div>
   `;
 }
 
 function renderOverview() {
-  const stats = getStats();
+  let allSent = 0, allDone = 0;
+  
   let modelsHtml = MODELS.map(m => {
     let sideHtml = SIDES.map(s => {
-      const ts = state.tickets.filter(t => t.model === m && t.side === s);
-      const totalQ = ts.reduce((acc, t) => acc + t.totalQty, 0);
-      const doneQ = ts.reduce((acc, t) => acc + t.completedQty, 0);
+      let st = getConsolidatedStats(m, s);
+      let inv = getInventory(m, s);
+      allSent += st.sent; allDone += st.done;
+      
+      let pctDone = st.sent > 0 ? Math.round((st.done / st.sent) * 100) : 0;
+      let pctStock = inv > 0 ? Math.round((st.done / inv) * 100) : 0;
+      
       return `
-        <div style="margin-bottom: 12px;">
-          <div style="font-size: 12px; font-weight: 600; color: var(--accent); margin-bottom: 4px;">
-            ${s === 'LH' ? 'LH (ซ้าย)' : 'RH (ขวา)'} — Jig ในสต็อก: ${getInventory(m,s)}
+        <div style="margin-bottom: 24px; border-bottom: 1px solid var(--line); padding-bottom: 16px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+            <div style="font-size: 16px; font-weight: 700; color: var(--ink);">
+              ${s === 'LH' ? 'LH (ซ้าย)' : 'RH (ขวา)'}
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size:10px; color:var(--ink-soft); text-transform:uppercase;">Jig ทั้งหมดใน Stock</div>
+              <div class="dash-stock">${inv}</div>
+            </div>
           </div>
-          <div class="metrics5">
-            <div class="metric"><span class="v">${totalQ}</span><span class="l">ส่งซ่อม</span></div>
-            <div class="metric"><span class="v">${doneQ}</span><span class="l">เสร็จแล้ว</span></div>
-            <div class="metric"><span class="v">${totalQ - doneQ}</span><span class="l">คงเหลือ</span></div>
-            <div class="metric"><span class="v">${ts.length}</span><span class="l">รายการ</span></div>
+          
+          <div class="metrics-grid">
+            <div class="metric"><span class="v">${st.sent}</span><span class="l">ยอดส่งซ่อม</span></div>
+            <div class="metric"><span class="v" style="color:var(--green)">${st.done}</span><span class="l">ทำเสร็จแล้ว</span></div>
+            <div class="metric"><span class="v" style="color:var(--red)">${st.pendingMaint}</span><span class="l">ค้างซ่อม</span></div>
+            <div class="metric"><span class="v" style="color:var(--accent-maint)">${st.readyForPaint}</span><span class="l">รอรับคืน</span></div>
           </div>
+          
+          <div style="display:flex; justify-content:space-between; margin-top:12px; font-size:12px; font-weight:600;">
+            <span style="color:var(--ink-soft)">ความคืบหน้าการซ่อม: ${pctDone}%</span>
+            <span style="color:var(--accent)">ซ่อมคืนเข้า Stock แล้ว: ${pctStock}%</span>
+          </div>
+          <div class="progress-bg"><div class="progress-fill" style="width:${pctDone}%"></div></div>
         </div>
       `;
     }).join('');
-    return `<div class="model-card"><div style="font-family: Oswald; font-size: 18px; font-weight: 600; margin-bottom: 12px;">${m}</div>${sideHtml}</div>`;
+    return `<div class="model-card"><div style="font-family: Oswald; font-size: 22px; font-weight: 700; color:var(--accent); margin-bottom: 16px; border-bottom:2px solid var(--accent); padding-bottom:4px; display:inline-block;">${m}</div>${sideHtml}</div>`;
   }).join('');
 
   document.getElementById('app').innerHTML = `
@@ -483,13 +326,14 @@ function renderOverview() {
     </div>
     <div class="content">
       <div class="overall-card">
-        <div class="overall-title">ยอดรวมงานส่งซ่อมทั้งหมด</div>
-        <div class="metrics5">
-          <div class="metric"><span class="v">${stats.totalQty}</span><span class="l">ทั้งหมด</span></div>
-          <div class="metric"><span class="v">${stats.completedQty}</span><span class="l">ทำแล้ว</span></div>
-          <div class="metric"><span class="v">${stats.remainingQty}</span><span class="l">เหลือ</span></div>
-          <div class="metric"><span class="v">${stats.pending}</span><span class="l">รอคิว</span></div>
-          <div class="metric ${stats.ngPending>0?'metric-ng':''}"><span class="v">${stats.ngPending}</span><span class="l">NG</span></div>
+        <div class="overall-title">สรุปยอดรวมทุกรุ่น (All Models)</div>
+        <div style="display:flex; justify-content:space-around; align-items:center;">
+           <div style="text-align:center;"><div style="font-size:12px; color:#CBD5E1;">ส่งซ่อมทั้งหมด</div><div style="font-family:'IBM Plex Mono'; font-size:32px; font-weight:700;">${allSent}</div></div>
+           <div style="text-align:center;"><div style="font-size:12px; color:#10B981;">ซ่อมเสร็จแล้ว</div><div style="font-family:'IBM Plex Mono'; font-size:32px; font-weight:700; color:#34D399;">${allDone}</div></div>
+           <div style="text-align:center;"><div style="font-size:12px; color:#FCA5A5;">ค้างซ่อม</div><div style="font-family:'IBM Plex Mono'; font-size:32px; font-weight:700; color:#F87171;">${allSent - allDone}</div></div>
+        </div>
+        <div class="progress-bg" style="background:rgba(255,255,255,0.2); margin-top:20px; height:12px;">
+          <div class="progress-fill" style="background:#34D399; width:${allSent>0 ? (allDone/allSent)*100 : 0}%"></div>
         </div>
       </div>
       ${modelsHtml}
@@ -503,48 +347,48 @@ function renderPaint() {
   
   if (tab === 'send' || tab === 'ng') {
     const isNg = tab === 'ng';
-    const openT = state.tickets.filter(t => (t.status === 'pending' || t.status === 'in_progress') && t.kind === (isNg ? 'ng' : 'normal'));
-    
     content = `
       <div class="form-card">
-        <div class="selector-group">
-          <label>1. เลือกรุ่นรถ (Model)</label>
-          <div class="chip-row">
-            ${MODELS.map(m => `<button class="chip ${m===uiState.form.model?'chip-active':''}" onclick="uiState.form.model='${m}';route()">${m}</button>`).join('')}
-          </div>
+        <div class="field"><label>1. เลือกรุ่นรถ (Model)</label>
+          <div class="chip-row">${MODELS.map(m => `<button class="chip ${m===uiState.form.model?'chip-active':''}" onclick="uiState.form.model='${m}';route()">${m}</button>`).join('')}</div>
         </div>
-        <div class="selector-group">
-          <label>2. เลือกข้าง (Side)</label>
-          <div class="chip-row">
-            ${SIDES.map(s => `<button class="chip ${s===uiState.form.side?'chip-active':''}" onclick="uiState.form.side='${s}';route()">${s}</button>`).join('')}
-          </div>
+        <div class="field"><label>2. เลือกข้าง (Side)</label>
+          <div class="chip-row">${SIDES.map(s => `<button class="chip ${s===uiState.form.side?'chip-active':''}" onclick="uiState.form.side='${s}';route()">${s}</button>`).join('')}</div>
         </div>
-        <div class="field">
-          <label>3. จำนวนชิ้น (Qty)</label>
-          <input type="number" id="formQty" placeholder="ระบุตัวเลข">
-        </div>
-        <div class="field">
-          <label>4. หมายเหตุ (Note)</label>
-          <input type="text" id="formNote" placeholder="${isNg ? 'อาการ NG เช่น เบ้าแตก' : 'เช่น ส่งของล็อตเช้า'}">
-        </div>
-        <button class="save-btn ${isNg?'ng-btn':''}" onclick="submitTicket('${isNg?'ng':'normal'}')">
-          ${isNg ? 'บันทึกส่งซ่อม NG' : 'บันทึกส่งงานปกติ'}
-        </button>
+        <div class="field"><label>3. จำนวนชิ้น (Qty)</label><input type="number" id="formQty" placeholder="ระบุตัวเลข"></div>
+        <div class="field"><label>4. หมายเหตุ (Note)</label><input type="text" id="formNote" placeholder="${isNg ? 'อาการ NG เช่น เบ้าแตก' : 'เช่น ส่งของล็อตเช้า'}"></div>
+        <button class="save-btn ${isNg?'ng-btn':''}" onclick="window.submitTicket('${isNg?'ng':'normal'}')">${isNg ? 'บันทึกส่งซ่อม NG' : 'บันทึกส่งงานปกติ'}</button>
       </div>
-      <h3 class="list-heading">รายการค้างรับ (${openT.length})</h3>
-      ${openT.map(t => makeCard(t)).join('') || '<div style="text-align:center;color:#64748B;padding:20px;">ไม่มีงานค้าง</div>'}
     `;
   } else if (tab === 'receive') {
-    const doneT = state.tickets.filter(t => t.status === 'completed');
-    content = `
-      <h3 class="list-heading">ซ่อมเสร็จ รอรับคืน (${doneT.length})</h3>
-      ${doneT.map(t => makeCard(t, true)).join('') || '<div style="text-align:center;color:#64748B;padding:20px;">ไม่มีงานรอรับ</div>'}
-    `;
+    // รวมยอดรอรับคืน
+    let readyHtml = [];
+    MODELS.forEach(m => SIDES.forEach(s => {
+      let st = getConsolidatedStats(m, s);
+      if(st.readyForPaint > 0) {
+        readyHtml.push(`
+          <div class="cons-card">
+            <div class="cons-head">
+              <span class="cons-title">${m} <span class="cons-sub">${s}</span></span>
+              <span style="font-size:12px; font-weight:700; color:var(--accent-maint); background:#FEF3C7; padding:4px 8px; border-radius:12px;">รอรับคืน</span>
+            </div>
+            <div class="cons-stat-row">
+              <div>ช่างซ่อมเสร็จ: <span class="highlight-green">${st.readyForPaint}</span> ชิ้น</div>
+            </div>
+            <div style="display:flex; gap:10px;">
+              <input type="number" id="rqty_${m}_${s}" placeholder="จำนวนที่รับกลับ" max="${st.readyForPaint}" style="flex:1; padding:10px; border:1px solid var(--line); border-radius:6px;">
+              <button class="save-btn" style="flex:1;" onclick="submitReceiveFIFO('${m}','${s}')">ยืนยันรับคืน</button>
+            </div>
+          </div>
+        `);
+      }
+    }));
+    content = readyHtml.length > 0 ? readyHtml.join('') : '<div style="text-align:center;color:#64748B;padding:20px;">ไม่มีงานรอรับคืน</div>';
   } else {
     content = MODELS.map(m => SIDES.map(s => `
       <div class="form-card" style="display:flex;align-items:center;gap:12px;padding:12px;">
-        <div style="flex:1;font-weight:600;">${m} <span class="tr-side">${s}</span></div>
-        <input type="number" id="inv_${m}_${s}" value="${getInventory(m,s)}" style="width:80px;padding:8px;border:1px solid #E2E8F0;border-radius:6px;">
+        <div style="flex:1;font-weight:600;">${m} <span class="cons-sub">${s}</span></div>
+        <input type="number" id="inv_${m}_${s}" value="${getInventory(m,s)}" style="width:80px;padding:8px;border:1px solid #E2E8F0;border-radius:6px;text-align:center;">
         <button class="save-btn" style="width:auto;padding:8px 16px;" onclick="setInventory('${m}','${s}',document.getElementById('inv_${m}_${s}').value)">บันทึก</button>
       </div>
     `).join('')).join('');
@@ -552,19 +396,15 @@ function renderPaint() {
 
   document.getElementById('app').innerHTML = `
     <div class="role-header bg-paint">
-      <div class="role-header-top">
-        <button class="home-link" onclick="location.hash='home'">← เมนูหลัก</button>
-        <button class="refresh-pill" onclick="fetchFromSheets()">↻ อัปเดต</button>
-      </div>
-      <p class="eyebrow" style="color:rgba(255,255,255,0.7);">Production Layer</p>
-      <h1>ฝ่าย PAINT (พ่นสี)</h1>
+      <div class="role-header-top"><button class="home-link" onclick="location.hash='home'">← เมนูหลัก</button><button class="refresh-pill" onclick="fetchFromSheets()">↻ อัปเดต</button></div>
+      <p class="eyebrow" style="color:rgba(255,255,255,0.7);">Production Layer</p><h1>ฝ่าย PAINT (พ่นสี)</h1>
     </div>
     <div class="content">
       <div class="tabs">
         <button class="tab-btn ${tab==='send'?'active':''}" onclick="uiState.paintTab='send';route()">ส่งงาน</button>
         <button class="tab-btn ${tab==='receive'?'active':''}" onclick="uiState.paintTab='receive';route()">รับคืน</button>
         <button class="tab-btn ${tab==='ng'?'active':''}" onclick="uiState.paintTab='ng';route()">แจ้ง NG</button>
-        <button class="tab-btn ${tab==='settings'?'active':''}" onclick="uiState.paintTab='settings';route()">ฐานข้อมูล Jig</button>
+        <button class="tab-btn ${tab==='settings'?'active':''}" onclick="uiState.paintTab='settings';route()">ฐานข้อมูล Stock</button>
       </div>
       ${content}
     </div>
@@ -572,94 +412,51 @@ function renderPaint() {
 }
 
 function renderMaint() {
-  const todo = state.tickets.filter(t => t.status === 'pending' || t.status === 'in_progress');
-  
+  let maintHtml = [];
+  MODELS.forEach(m => SIDES.forEach(s => {
+    let st = getConsolidatedStats(m, s);
+    if(st.pendingMaint > 0) {
+      let isNg = st.ngPending > 0;
+      maintHtml.push(`
+        <div class="cons-card" style="${isNg ? 'border-left-color: var(--red);' : ''}">
+          <div class="cons-head">
+            <span class="cons-title">${m} <span class="cons-sub">${s}</span></span>
+            ${isNg ? '<span style="background:var(--red);color:#fff;font-size:10px;padding:4px 8px;border-radius:12px;font-weight:bold;">มี NG ค้าง</span>' : ''}
+          </div>
+          <div class="cons-stat-row">
+            <div>ยอดรอซ่อมทั้งหมด: <span class="highlight-red">${st.pendingMaint}</span> ชิ้น</div>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <input type="number" id="mqty_${m}_${s}" placeholder="จำนวนที่ซ่อมเสร็จ" max="${st.pendingMaint}" style="flex:1; padding:10px; border:1px solid var(--line); border-radius:6px; font-size:16px; font-family:'IBM Plex Mono';">
+            <button class="save-btn" style="flex:1; background:var(--accent-maint);" onclick="submitProgressFIFO('${m}','${s}')">บันทึกงานเสร็จ</button>
+          </div>
+        </div>
+      `);
+    }
+  }));
+
   document.getElementById('app').innerHTML = `
     <div class="role-header bg-maintenance">
-      <div class="role-header-top">
-        <button class="home-link" onclick="location.hash='home'">← เมนูหลัก</button>
-        <button class="refresh-pill" onclick="fetchFromSheets()">↻ อัปเดต</button>
-      </div>
-      <p class="eyebrow" style="color:rgba(255,255,255,0.7);">Support Layer</p>
-      <h1>ฝ่าย MAINTENANCE</h1>
+      <div class="role-header-top"><button class="home-link" onclick="location.hash='home'">← เมนูหลัก</button><button class="refresh-pill" onclick="fetchFromSheets()">↻ อัปเดต</button></div>
+      <p class="eyebrow" style="color:rgba(255,255,255,0.7);">Support Layer</p><h1>ฝ่าย MAINTENANCE</h1>
     </div>
     <div class="content">
-      <h3 class="list-heading">รายการซ่อมค้าง (${todo.length})</h3>
-      ${todo.map(t => {
-        const pct = Math.round((t.completedQty / t.totalQty) * 100) || 0;
-        return `
-          <div class="ticket-card ${t.kind==='ng'?'ticket-ng':''}">
-            <div class="tc-head">
-              <span class="tc-model">${t.model} <span class="tr-side">${t.side}</span></span>
-              <span class="status-badge">${t.status==='pending'?'⏳ รอเริ่ม':'🔄 กำลังทำ'}</span>
-            </div>
-            <div style="padding: 0 16px 16px;">
-              <div class="tc-qty">ความคืบหน้า: ${t.completedQty} / ${t.totalQty} (เหลือ ${t.remainingQty})</div>
-              <div class="tc-progress"><div class="tc-progress-bar ${t.kind==='ng'?'ng':''}" style="width:${pct}%"></div></div>
-              ${t.note ? `<div class="tc-note">หมายเหตุ: ${t.note}</div>`:''}
-              
-              <div class="edit-panel">
-                <label style="font-size:12px; font-weight:600; display:block; margin-bottom:8px;">จำนวนที่ซ่อมเสร็จเพิ่ม:</label>
-                <div style="display:flex; gap:10px;">
-                  <input type="number" id="mqty_${t.id}" value="${t.remainingQty}" style="flex:1; padding:10px; border:1px solid var(--line); border-radius:6px; font-size:16px;">
-                  <button class="save-btn" style="flex:1;" onclick="submitProgress('${t.id}')">บันทึกงาน</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('') || '<div style="text-align:center;color:#64748B;padding:20px;">ไม่มีงานค้าง เยี่ยมมาก! 🎉</div>'}
+      <h3 class="list-heading" style="font-family:'Oswald'; font-size:18px; margin: 10px 0 16px;">สรุปยอดค้างซ่อม (แบ่งตามรุ่น)</h3>
+      ${maintHtml.length > 0 ? maintHtml.join('') : '<div style="text-align:center;color:#64748B;padding:40px;background:#fff;border-radius:12px;">ไม่มีงานค้าง เยี่ยมมาก! 🎉</div>'}
     </div>
   `;
 }
 
-function makeCard(t, showReceiveBtn = false) {
-  const pct = Math.round((t.completedQty / t.totalQty) * 100) || 0;
-  return `
-    <div class="ticket-card ${t.kind==='ng'?'ticket-ng':''}" style="margin-bottom:12px;">
-      <div class="tc-head" style="padding:12px 16px 0;">
-        <span class="tc-model">${t.model} <span class="tr-side">${t.side}</span></span>
-        ${t.kind==='ng'?'<span style="background:var(--red);color:#fff;font-size:10px;padding:2px 6px;border-radius:4px;font-weight:bold;">NG</span>':''}
-      </div>
-      <div style="padding:12px 16px;">
-        <div class="tc-qty">${t.completedQty} / ${t.totalQty} (เหลือ ${t.remainingQty})</div>
-        <div class="tc-progress"><div class="tc-progress-bar ${t.kind==='ng'?'ng':(pct===100?'done':'')}" style="width:${pct}%"></div></div>
-        ${t.note ? `<div class="tc-note">${t.note}</div>`:''}
-        <div style="font-size:11px;color:#94A3B8;">ส่งเมื่อ: ${fmtTime(t.createdAt)}</div>
-        ${showReceiveBtn ? `<button class="save-btn" style="margin-top:12px;" onclick="receiveTicket('${t.id}');showToast('รับคืนแล้ว');route();">กดรับงานคืน</button>` : ''}
-      </div>
-    </div>
-  `;
-}
-
-// ====================================================================
-// 7. ACTION WRAPPERS
-// ====================================================================
 window.submitTicket = function(kind) {
   const val = document.getElementById('formQty').value;
-  const note = document.getElementById('formNote').value;
   if(!val || val<=0) { showToast('กรุณากรอกจำนวน'); return; }
-  createTicket(uiState.form.model, uiState.form.side, kind, val, note);
+  createTicket(uiState.form.model, uiState.form.side, kind, val, document.getElementById('formNote').value);
   showToast('✅ บันทึกและส่งข้อมูลแล้ว');
   route();
 };
-window.submitProgress = function(id) {
-  const val = document.getElementById('mqty_'+id).value;
-  if(!val || val<=0) { showToast('กรุณากรอกจำนวน'); return; }
-  updateProgress(id, val);
-  showToast('✅ อัปเดตงานแล้ว');
-  route();
-};
-window.route = function() {
-  const hash = window.location.hash;
-  if(hash === '#paint') renderPaint();
-  else if(hash === '#maintenance') renderMaint();
-  else if(hash === '#overview') renderOverview();
-  else renderHome();
-};
 
 window.addEventListener('hashchange', route);
-initRoute(); // เริ่มทำงาน
+initRoute();
 </script>
 </body>
 </html>
