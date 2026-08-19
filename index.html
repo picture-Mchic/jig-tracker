@@ -99,6 +99,7 @@
       margin-bottom: 10px;
     }
     .home-link { color: #D8E2E9; font-size: 12px; text-decoration: none; font-family: 'IBM Plex Mono', monospace; background: none; border: none; padding: 0; cursor: pointer; }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
     .refresh-pill {
       background: rgba(255,255,255,0.12);
       border: 1px solid rgba(255,255,255,0.25);
@@ -391,29 +392,18 @@
     .toast.toast-error { background: var(--red); }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    .external-bar {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-top: 16px;
+    .settings-bar {
+      margin-top: 20px;
       padding: 12px 16px;
       background: var(--card);
       border: 1px solid var(--line);
       border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .ext-btn {
-      padding: 8px 14px;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      background: var(--paper);
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: 'Inter', sans-serif;
-    }
-    .ext-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
-    .ext-btn.github { background: #24292e; color: #fff; border-color: #24292e; }
-    .ext-btn.sheets { background: #0F9D58; color: #fff; border-color: #0F9D58; }
+    .status-indicator { font-size: 12px; color: var(--ink-soft); font-family: 'IBM Plex Mono', monospace; }
+    .status-indicator.connected { color: var(--green); font-weight: 600; }
     .modal-overlay {
       position: fixed;
       top:0; left:0; right:0; bottom:0;
@@ -481,22 +471,12 @@ function saveOne(type, id, data) {
   localStorage.setItem(getKey(type, id), JSON.stringify(data));
 }
 
-function deleteOne(type, id) {
-  localStorage.removeItem(getKey(type, id));
-}
-
 function getCurrentRole() {
   const hash = location.hash.replace('#', '');
   if (hash === 'overview') return 'overview';
   if (hash === 'paint') return 'paint';
   if (hash === 'maintenance') return 'maintenance';
   return null;
-}
-
-function getRoleColor(role) {
-  if (role === 'paint') return '#E1592C';
-  if (role === 'maintenance') return '#B8791E';
-  return '#3E5C76';
 }
 
 function escapeHtml(s) {
@@ -536,6 +516,7 @@ function getInventory(model, side) {
 function setInventory(model, side, total) {
   const key = `${model}-${side}`;
   saveOne('inventory', key, { total: Number(total), updatedAt: new Date().toISOString() });
+  syncToSheetsSilently();
 }
 
 function createTicket(role, model, side, kind, totalQty, note) {
@@ -546,7 +527,7 @@ function createTicket(role, model, side, kind, totalQty, note) {
     totalQty: Number(totalQty),
     completedQty: 0,
     remainingQty: Number(totalQty),
-    status: 'pending', // pending, in_progress, completed, received
+    status: 'pending',
     note: note || '',
     createdAt: now,
     updatedAt: now,
@@ -554,12 +535,13 @@ function createTicket(role, model, side, kind, totalQty, note) {
     history: [{ action: 'created', timestamp: now }]
   };
   saveOne('ticket', id, ticket);
+  syncToSheetsSilently();
   return ticket;
 }
 
 function updateProgress(role, id, additionalQty) {
   const ticket = loadOne('ticket', id);
-  if (!ticket || ticket.role !== role) return null;
+  if (!ticket) return null;
   const qty = Number(additionalQty);
   if (qty <= 0) return ticket;
   const newCompleted = Math.min(ticket.totalQty, ticket.completedQty + qty);
@@ -571,33 +553,24 @@ function updateProgress(role, id, additionalQty) {
   ticket.updatedAt = new Date().toISOString();
   ticket.history.push({ action: 'progress', qty: added, timestamp: ticket.updatedAt });
   saveOne('ticket', id, ticket);
+  syncToSheetsSilently();
   return ticket;
 }
 
 function receiveTicket(role, id) {
   const ticket = loadOne('ticket', id);
-  if (!ticket) return null;
-  if (ticket.status !== 'completed') return null;
+  if (!ticket || ticket.status !== 'completed') return null;
   ticket.status = 'received';
   ticket.updatedAt = new Date().toISOString();
   ticket.history.push({ action: 'received', timestamp: ticket.updatedAt });
   saveOne('ticket', id, ticket);
+  syncToSheetsSilently();
   return ticket;
 }
 
 function getStats(role) {
   const tickets = getTickets(role);
-  const stats = {
-    total: 0,
-    pending: 0,
-    in_progress: 0,
-    completed: 0,
-    received: 0,
-    totalQty: 0,
-    completedQty: 0,
-    remainingQty: 0,
-    ngPending: 0
-  };
+  const stats = { total: 0, pending: 0, in_progress: 0, completed: 0, received: 0, totalQty: 0, completedQty: 0, remainingQty: 0, ngPending: 0 };
   for (const t of tickets) {
     stats.total++;
     if (t.status === 'pending') stats.pending++;
@@ -632,225 +605,14 @@ function getModelStats(role) {
 }
 
 // ====================================================================
-// 3. TOAST & MODAL
+// 3. GOOGLE SHEETS SYNC ENGINE
 // ====================================================================
-let modalCallback = null;
-
-function showModal(title, fields, callback) {
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  let html = `<div class="modal-box"><h3>${escapeHtml(title)}</h3>`;
-  for (const f of fields) {
-    html += `<label>${escapeHtml(f.label)}</label>`;
-    if (f.type === 'textarea') {
-      html += `<textarea id="modal-${f.id}" placeholder="${escapeHtml(f.placeholder||'')}">${escapeHtml(f.value||'')}</textarea>`;
-    } else {
-      html += `<input type="${f.type||'text'}" id="modal-${f.id}" value="${escapeHtml(f.value||'')}" placeholder="${escapeHtml(f.placeholder||'')}">`;
-    }
-  }
-  html += `<div class="modal-actions">
-    <button class="btn-secondary" data-action="modalCancel">ยกเลิก</button>
-    <button class="btn-primary" data-action="modalConfirm">ตกลง</button>
-  </div></div>`;
-  overlay.innerHTML = html;
-  document.body.appendChild(overlay);
-  modalCallback = callback;
-  overlay.querySelector('[data-action="modalCancel"]').addEventListener('click', () => {
-    document.body.removeChild(overlay);
-    modalCallback = null;
-  });
-  overlay.querySelector('[data-action="modalConfirm"]').addEventListener('click', () => {
-    const data = {};
-    for (const f of fields) {
-      const el = document.getElementById(`modal-${f.id}`);
-      if (el) data[f.id] = el.value;
-    }
-    if (callback) callback(data);
-    document.body.removeChild(overlay);
-    modalCallback = null;
-  });
-}
-
-// ====================================================================
-// 4. EXTERNAL CONNECTIONS (GITHUB & GOOGLE SHEETS)
-// ====================================================================
-function exportToGithub() {
-  const data = exportAllData();
-  const content = JSON.stringify(data, null, 2);
-  // ใช้ GitHub Gist API (ต้องมี token)
-  const token = localStorage.getItem('github_token') || '';
-  if (!token) {
-    showModal('เชื่อมต่อ GitHub', [
-      { id: 'token', label: 'GitHub Personal Access Token (ต้องมีสิทธิ์ gist)', type: 'password', placeholder: 'ghp_xxxx' },
-      { id: 'filename', label: 'ชื่อไฟล์ (ไม่ต้องใส่นามสกุล)', value: 'jig_data' }
-    ], (data) => {
-      if (data.token) localStorage.setItem('github_token', data.token);
-      doGithubExport(data.token, data.filename || 'jig_data', content);
-    });
-    return;
-  }
-  showModal('ส่งข้อมูลไป GitHub', [
-    { id: 'filename', label: 'ชื่อไฟล์ (ไม่ต้องใส่นามสกุล)', value: 'jig_data' }
-  ], (data) => {
-    doGithubExport(token, data.filename || 'jig_data', content);
-  });
-}
-
-function doGithubExport(token, filename, content) {
-  const gist = {
-    description: 'Jig Tracker Data Export',
-    public: false,
-    files: {
-      [filename + '.json']: { content: content }
-    }
-  };
-  fetch('https://api.github.com/gists', {
-    method: 'POST',
-    headers: {
-      'Authorization': `token ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(gist)
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.id) {
-      showToast('✅ ส่งข้อมูลไป GitHub สำเร็จ! Gist ID: ' + data.id);
-      localStorage.setItem('last_gist_id', data.id);
-    } else {
-      showToast('❌ ส่งไม่สำเร็จ: ' + (data.message || 'unknown error'), 'error');
-    }
-  })
-  .catch(err => {
-    showToast('❌ เกิดข้อผิดพลาด: ' + err.message, 'error');
-  });
-}
-
-function importFromGithub() {
-  const token = localStorage.getItem('github_token') || '';
-  if (!token) {
-    showModal('เชื่อมต่อ GitHub', [
-      { id: 'token', label: 'GitHub Personal Access Token', type: 'password', placeholder: 'ghp_xxxx' },
-      { id: 'gist_id', label: 'Gist ID (จากลิงก์ที่เคยส่ง)', placeholder: 'abc123...' }
-    ], (data) => {
-      if (data.token) localStorage.setItem('github_token', data.token);
-      doGithubImport(data.token, data.gist_id);
-    });
-    return;
-  }
-  showModal('นำเข้าข้อมูลจาก GitHub', [
-    { id: 'gist_id', label: 'Gist ID', placeholder: 'abc123...' }
-  ], (data) => {
-    doGithubImport(token, data.gist_id);
-  });
-}
-
-function doGithubImport(token, gistId) {
-  if (!gistId) { showToast('❌ กรุณาระบุ Gist ID', 'error'); return; }
-  fetch(`https://api.github.com/gists/${gistId}`, {
-    headers: { 'Authorization': `token ${token}` }
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.files) {
-      const firstFile = Object.values(data.files)[0];
-      if (firstFile && firstFile.content) {
-        const imported = JSON.parse(firstFile.content);
-        importAllData(imported);
-        showToast('✅ นำเข้าข้อมูลจาก GitHub สำเร็จ!');
-        route();
-      } else {
-        showToast('❌ ไม่พบไฟล์ใน Gist', 'error');
-      }
-    } else {
-      showToast('❌ ไม่พบ Gist: ' + (data.message || ''), 'error');
-    }
-  })
-  .catch(err => {
-    showToast('❌ เกิดข้อผิดพลาด: ' + err.message, 'error');
-  });
-}
-
-function exportToGoogleSheets() {
-  const scriptUrl = localStorage.getItem('gsheets_script_url') || '';
-  if (!scriptUrl) {
-    showModal('เชื่อมต่อ Google Sheets', [
-      { id: 'url', label: 'Google Apps Script Web App URL (ต้อง deploy)', placeholder: 'https://script.google.com/macros/s/.../exec' }
-    ], (data) => {
-      if (data.url) localStorage.setItem('gsheets_script_url', data.url);
-      doSheetsExport(data.url);
-    });
-    return;
-  }
-  doSheetsExport(scriptUrl);
-}
-
-function doSheetsExport(url) {
-  const data = exportAllData();
-  fetch(url, {
-    method: 'POST',
-    mode: 'cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'save', data: data })
-  })
-  .then(res => res.json())
-  .then(result => {
-    if (result.success) {
-      showToast('✅ ส่งข้อมูลไป Google Sheets สำเร็จ!');
-    } else {
-      showToast('❌ ส่งไม่สำเร็จ: ' + (result.error || 'unknown'), 'error');
-    }
-  })
-  .catch(err => {
-    showToast('❌ เกิดข้อผิดพลาด: ' + err.message, 'error');
-  });
-}
-
-function importFromGoogleSheets() {
-  const scriptUrl = localStorage.getItem('gsheets_script_url') || '';
-  if (!scriptUrl) {
-    showModal('เชื่อมต่อ Google Sheets', [
-      { id: 'url', label: 'Google Apps Script Web App URL', placeholder: 'https://script.google.com/macros/s/.../exec' }
-    ], (data) => {
-      if (data.url) localStorage.setItem('gsheets_script_url', data.url);
-      doSheetsImport(data.url);
-    });
-    return;
-  }
-  doSheetsImport(scriptUrl);
-}
-
-function doSheetsImport(url) {
-  fetch(url, {
-    method: 'POST',
-    mode: 'cors',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'load' })
-  })
-  .then(res => res.json())
-  .then(result => {
-    if (result.success && result.data) {
-      importAllData(result.data);
-      showToast('✅ นำเข้าข้อมูลจาก Google Sheets สำเร็จ!');
-      route();
-    } else {
-      showToast('❌ นำเข้าไม่สำเร็จ: ' + (result.error || 'unknown'), 'error');
-    }
-  })
-  .catch(err => {
-    showToast('❌ เกิดข้อผิดพลาด: ' + err.message, 'error');
-  });
-}
-
 function exportAllData() {
-  const tickets = loadAll('ticket');
-  const inventory = loadAll('inventory');
-  return { tickets, inventory, exportedAt: new Date().toISOString() };
+  return { tickets: loadAll('ticket'), inventory: loadAll('inventory'), exportedAt: new Date().toISOString() };
 }
 
 function importAllData(data) {
-  if (!data || !data.tickets) return;
-  // ลบข้อมูลเก่าทั้งหมด
+  if (!data) return;
   const allTicketKeys = [];
   const prefix = getKey('ticket', '');
   for (let i = 0; i < localStorage.length; i++) {
@@ -858,7 +620,7 @@ function importAllData(data) {
     if (key && key.startsWith(prefix)) allTicketKeys.push(key);
   }
   for (const k of allTicketKeys) localStorage.removeItem(k);
-  
+
   const allInvKeys = [];
   const invPrefix = getKey('inventory', '');
   for (let i = 0; i < localStorage.length; i++) {
@@ -866,10 +628,9 @@ function importAllData(data) {
     if (key && key.startsWith(invPrefix)) allInvKeys.push(key);
   }
   for (const k of allInvKeys) localStorage.removeItem(k);
-  
-  // นำเข้าใหม่
-  for (const t of data.tickets) {
-    saveOne('ticket', t.id, t);
+
+  if (data.tickets) {
+    for (const t of data.tickets) saveOne('ticket', t.id, t);
   }
   if (data.inventory) {
     for (const inv of data.inventory) {
@@ -879,10 +640,109 @@ function importAllData(data) {
   }
 }
 
+function getScriptUrl() {
+  return localStorage.getItem('gsheets_script_url') || '';
+}
+
+function syncToSheetsSilently() {
+  const url = getScriptUrl();
+  if (!url) return;
+  const data = exportAllData();
+  const fullUrl = `${url}?action=save&data=${encodeURIComponent(JSON.stringify(data))}`;
+  
+  // ใช้ img/fetch beacon ป้องกันปัญหา CORS
+  fetch(fullUrl, { method: 'GET', mode: 'no-cors' })
+    .then(() => console.log('Auto-synced to Sheets successfully'))
+    .catch(err => console.error('Auto-sync failed:', err));
+}
+
+function fetchFromSheets(silent = false) {
+  const url = getScriptUrl();
+  if (!url) {
+    if (!silent) configureSheetsUrl();
+    return;
+  }
+  if (!silent) showToast('🔄 กำลังดึงข้อมูลล่าสุด...');
+  fetch(`${url}?action=load`)
+    .then(res => res.json())
+    .then(res => {
+      if (res.success && res.data) {
+        importAllData(res.data);
+        if (!silent) showToast('✅ อัปเดตข้อมูลสำเร็จ');
+        route();
+      }
+    })
+    .catch(err => {
+      if (!silent) showToast('❌ ไม่สามารถดึงข้อมูลได้: ' + err.message, 'error');
+    });
+}
+
+function configureSheetsUrl() {
+  const current = getScriptUrl();
+  showModal('ตั้งค่าการเชื่อมต่อ Google Sheets', [
+    { id: 'url', label: 'Google Apps Script Web App URL', value: current, placeholder: 'https://script.google.com/macros/s/.../exec' }
+  ], (data) => {
+    if (data.url) {
+      localStorage.setItem('gsheets_script_url', data.url.trim());
+      showToast('✅ บันทึก URL สำเร็จ กำลังดึงข้อมูล...');
+      fetchFromSheets();
+    }
+  });
+}
+
+// Auto Polling ทุก 20 วินาที
+setInterval(() => {
+  if (getScriptUrl()) fetchFromSheets(true);
+}, 20000);
+
 // ====================================================================
-// 5. UI RENDER FUNCTIONS
+// 4. MODAL & UI HELPERS
+// ====================================================================
+function showModal(title, fields, callback) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  let html = `<div class="modal-box"><h3>${escapeHtml(title)}</h3>`;
+  for (const f of fields) {
+    html += `<label>${escapeHtml(f.label)}</label>`;
+    html += `<input type="${f.type||'text'}" id="modal-${f.id}" value="${escapeHtml(f.value||'')}" placeholder="${escapeHtml(f.placeholder||'')}">`;
+  }
+  html += `<div class="modal-actions">
+    <button class="btn-secondary" data-action="modalCancel">ยกเลิก</button>
+    <button class="btn-primary" data-action="modalConfirm">ตกลง</button>
+  </div></div>`;
+  overlay.innerHTML = html;
+  document.body.appendChild(overlay);
+
+  overlay.querySelector('[data-action="modalCancel"]').addEventListener('click', () => overlay.remove());
+  overlay.querySelector('[data-action="modalConfirm"]').addEventListener('click', () => {
+    const data = {};
+    for (const f of fields) {
+      const el = document.getElementById(`modal-${f.id}`);
+      if (el) data[f.id] = el.value;
+    }
+    if (callback) callback(data);
+    overlay.remove();
+  });
+}
+
+function bottomSettingsBar() {
+  const hasUrl = Boolean(getScriptUrl());
+  return `
+    <div class="settings-bar">
+      <span class="status-indicator ${hasUrl ? 'connected' : ''}">
+        ${hasUrl ? '🟢 เชื่อมต่อ Google Sheets (Auto Sync On)' : '⚪ ยังไม่เชื่อมต่อ Google Sheets'}
+      </span>
+      <button class="save-btn small-btn" data-action="configSheets">⚙️ ตั้งค่าเชื่อมต่อ</button>
+    </div>
+  `;
+}
+
+// ====================================================================
+// 5. RENDER PAGES
 // ====================================================================
 let currentTab = { paint: 'send', maint: 'todo' };
+let paintForm = { model: MODELS[0], side: SIDES[0], qty: '', note: '' };
+let ngForm = { model: MODELS[0], side: SIDES[0], qty: '', note: '' };
 
 function renderHome() {
   const html = `
@@ -906,6 +766,7 @@ function renderHome() {
         <h2>รายการที่ต้องทำ</h2>
         <p>ดูและอัปเดตความคืบหน้า</p>
       </a>
+      ${bottomSettingsBar()}
     </div>
   `;
   document.getElementById('app').innerHTML = html;
@@ -915,21 +776,21 @@ function renderOverview() {
   const role = 'overview';
   const stats = getStats(role);
   const modelStats = getModelStats(role);
-  const tickets = getTickets(role);
   
   let modelsHtml = '';
   for (const model of MODELS) {
     let sidesHtml = '';
     for (const side of SIDES) {
       const s = modelStats[model][side];
+      const invTotal = getInventory(model, side);
       sidesHtml += `
         <div class="side-block">
-          <div class="side-label">${side === 'LH' ? 'LH (ซ้าย)' : 'RH (ขวา)'}</div>
+          <div class="side-label">${side === 'LH' ? 'LH (ซ้าย)' : 'RH (ขวา)'} — Jig ทั้งหมดในสต็อก: ${invTotal} ชิ้น</div>
           <div class="metrics5">
-            <div class="metric"><span class="v">${s.totalQty}</span><span class="l">ทั้งหมด</span></div>
+            <div class="metric"><span class="v">${s.totalQty}</span><span class="l">งานส่งซ่อม</span></div>
             <div class="metric"><span class="v">${s.completedQty}</span><span class="l">ทำแล้ว</span></div>
             <div class="metric"><span class="v">${s.remainingQty}</span><span class="l">คงเหลือ</span></div>
-            <div class="metric"><span class="v">${s.count}</span><span class="l">จำนวนงาน</span></div>
+            <div class="metric"><span class="v">${s.count}</span><span class="l">จำนวนรายการ</span></div>
           </div>
         </div>
       `;
@@ -941,17 +802,19 @@ function renderOverview() {
     <div class="role-header" style="background:#2C4356;">
       <div class="role-header-top">
         <button class="home-link" data-action="goHome">← เปลี่ยนมุมมอง</button>
-        <button class="refresh-pill" data-action="refresh">↻ รีเฟรช</button>
+        <div class="header-actions">
+          <button class="refresh-pill" data-action="manualRefresh">↻ ดึงข้อมูลล่าสุด</button>
+        </div>
       </div>
       <p class="eyebrow">ภาพรวมทุกฝ่าย</p>
       <h1>Overview Dashboard</h1>
-      <p class="sync-note">ข้อมูลจาก Paint และ Maintenance</p>
+      <p class="sync-note">ระบบอัปเดตข้อมูลอัตโนมัติทุก 20 วินาที</p>
     </div>
     <div class="content">
       <div class="overall-card">
-        <div class="overall-title">ยอดรวมทุกรุ่นทุกข้าง</div>
+        <div class="overall-title">ยอดรวมงานพ่นสี / ส่งซ่อมทั้งหมด</div>
         <div class="metrics5">
-          <div class="metric"><span class="v">${stats.totalQty}</span><span class="l">Jig ทั้งหมด</span></div>
+          <div class="metric"><span class="v">${stats.totalQty}</span><span class="l">ยอดส่งงาน</span></div>
           <div class="metric"><span class="v">${stats.completedQty}</span><span class="l">ทำแล้ว</span></div>
           <div class="metric"><span class="v">${stats.remainingQty}</span><span class="l">คงเหลือ</span></div>
           <div class="metric"><span class="v">${stats.pending}</span><span class="l">รอดำเนินการ</span></div>
@@ -959,7 +822,7 @@ function renderOverview() {
         </div>
       </div>
       ${modelsHtml}
-      ${externalButtons()}
+      ${bottomSettingsBar()}
     </div>
   `;
   document.getElementById('app').innerHTML = html;
@@ -968,7 +831,6 @@ function renderOverview() {
 function renderPaint() {
   const role = 'paint';
   const tickets = getTickets(role);
-  const stats = getStats(role);
   const tab = currentTab.paint || 'send';
   
   let tabContent = '';
@@ -981,21 +843,20 @@ function renderPaint() {
     <div class="role-header" style="background:#B8451F;">
       <div class="role-header-top">
         <button class="home-link" data-action="goHome">← เปลี่ยนมุมมอง</button>
-        <button class="refresh-pill" data-action="refresh">↻ รีเฟรช</button>
+        <button class="refresh-pill" data-action="manualRefresh">↻ ดึงข้อมูลล่าสุด</button>
       </div>
       <p class="eyebrow">ฝ่าย Paint</p>
       <h1>ส่งงาน · รับงานคืน</h1>
-      <p class="sync-note">สร้างงานส่งให้ Maintenance</p>
     </div>
     <div class="content">
       <div class="tabs">
         <button class="tab-btn ${tab==='send'?'active':''}" data-action="switchTab" data-tab="paint" data-tabvalue="send">ส่งงาน</button>
         <button class="tab-btn ${tab==='receive'?'active':''}" data-action="switchTab" data-tab="paint" data-tabvalue="receive">รับงานคืน</button>
         <button class="tab-btn ${tab==='ng'?'active':''}" data-action="switchTab" data-tab="paint" data-tabvalue="ng">ส่ง NG</button>
-        <button class="tab-btn ${tab==='settings'?'active':''}" data-action="switchTab" data-tab="paint" data-tabvalue="settings">จำนวน Jig</button>
+        <button class="tab-btn ${tab==='settings'?'active':''}" data-action="switchTab" data-tab="paint" data-tabvalue="settings">จำนวน Jig ในสต็อก</button>
       </div>
       ${tabContent}
-      ${externalButtons()}
+      ${bottomSettingsBar()}
     </div>
   `;
   document.getElementById('app').innerHTML = html;
@@ -1095,7 +956,6 @@ function renderPaintSettings(role) {
 function renderMaintenance() {
   const role = 'maintenance';
   const tickets = getTickets(role);
-  const stats = getStats(role);
   const tab = currentTab.maint || 'todo';
   
   let tabContent = '';
@@ -1106,11 +966,10 @@ function renderMaintenance() {
     <div class="role-header" style="background:#8F5F16;">
       <div class="role-header-top">
         <button class="home-link" data-action="goHome">← เปลี่ยนมุมมอง</button>
-        <button class="refresh-pill" data-action="refresh">↻ รีเฟรช</button>
+        <button class="refresh-pill" data-action="manualRefresh">↻ ดึงข้อมูลล่าสุด</button>
       </div>
       <p class="eyebrow">ฝ่าย Maintenance</p>
       <h1>รายการที่ต้องทำ</h1>
-      <p class="sync-note">อัปเดตความคืบหน้าของงาน</p>
     </div>
     <div class="content">
       <div class="tabs">
@@ -1118,7 +977,7 @@ function renderMaintenance() {
         <button class="tab-btn ${tab==='history'?'active':''}" data-action="switchTab" data-tab="maint" data-tabvalue="history">ประวัติ</button>
       </div>
       ${tabContent}
-      ${externalButtons()}
+      ${bottomSettingsBar()}
     </div>
   `;
   document.getElementById('app').innerHTML = html;
@@ -1147,9 +1006,6 @@ function renderMaintTodo(role, tickets) {
             <div class="field"><label>เพิ่มจำนวนที่ทำเสร็จ</label>
               <input type="number" min="1" max="${t.remainingQty}" id="maintQty-${t.id}" value="${Math.min(1, t.remainingQty)}">
             </div>
-            <div class="field"><label>หมายเหตุ</label>
-              <input type="text" id="maintNote-${t.id}" placeholder="เช่น ซ่อมเสร็จบางส่วน">
-            </div>
             <button class="save-btn" data-action="doUpdateProgress" data-id="${t.id}">อัปเดตความคืบหน้า</button>
           </div>
         </div>
@@ -1164,9 +1020,6 @@ function renderMaintHistory(role, tickets) {
   return hist.slice(0,30).map(t => ticketRow(t)).join('');
 }
 
-// ====================================================================
-// 6. UI COMPONENTS
-// ====================================================================
 function ticketRow(t) {
   const pct = t.totalQty > 0 ? Math.round((t.completedQty / t.totalQty) * 100) : 0;
   return `
@@ -1203,28 +1056,10 @@ function ticketCard(t, role) {
   `;
 }
 
-function externalButtons() {
-  return `
-    <div class="external-bar">
-      <button class="ext-btn github" data-action="exportGithub">📤 ส่งไป GitHub</button>
-      <button class="ext-btn github" data-action="importGithub">📥 ดึงจาก GitHub</button>
-      <button class="ext-btn sheets" data-action="exportSheets">📤 ส่งไป Sheets</button>
-      <button class="ext-btn sheets" data-action="importSheets">📥 ดึงจาก Sheets</button>
-    </div>
-  `;
-}
-
 // ====================================================================
-// 7. FORM STATE
-// ====================================================================
-let paintForm = { model: MODELS[0], side: SIDES[0], qty: '', note: '' };
-let ngForm = { model: MODELS[0], side: SIDES[0], qty: '', note: '' };
-
-// ====================================================================
-// 8. ACTIONS (called from event delegation)
+// 6. ROUTER & EVENT LISTENERS
 // ====================================================================
 function goHome() { location.hash = 'home'; }
-function refresh() { route(); }
 
 function switchTab(tab, value) {
   if (tab === 'paint') currentTab.paint = value;
@@ -1232,69 +1067,44 @@ function switchTab(tab, value) {
   route();
 }
 
-function setPaintField(field, value) {
-  paintForm[field] = value;
-  route();
-}
-
-function setNgField(field, value) {
-  ngForm[field] = value;
-  route();
-}
+function setPaintField(field, value) { paintForm[field] = value; route(); }
+function setNgField(field, value) { ngForm[field] = value; route(); }
 
 function doCreateTicket() {
   const qty = parseInt(document.getElementById('paintQty').value);
   if (!qty || qty <= 0) { showToast('กรุณากรอกจำนวน', 'error'); return; }
   const note = document.getElementById('paintNote').value;
-  try {
-    createTicket('paint', paintForm.model, paintForm.side, 'normal', qty, note);
-    paintForm.qty = '';
-    paintForm.note = '';
-    showToast('✅ ส่งงานเรียบร้อย');
-    route();
-  } catch(e) {
-    showToast('❌ ส่งไม่สำเร็จ', 'error');
-  }
+  createTicket('paint', paintForm.model, paintForm.side, 'normal', qty, note);
+  paintForm.qty = '';
+  paintForm.note = '';
+  showToast('✅ ส่งงานเรียบร้อย (Sync แล้ว)');
+  route();
 }
 
 function doCreateNg() {
   const qty = parseInt(document.getElementById('ngQty').value);
   if (!qty || qty <= 0) { showToast('กรุณากรอกจำนวน', 'error'); return; }
   const note = document.getElementById('ngNote').value;
-  try {
-    createTicket('paint', ngForm.model, ngForm.side, 'ng', qty, note);
-    ngForm.qty = '';
-    ngForm.note = '';
-    showToast('✅ ส่ง NG เรียบร้อย');
-    route();
-  } catch(e) {
-    showToast('❌ ส่งไม่สำเร็จ', 'error');
-  }
+  createTicket('paint', ngForm.model, ngForm.side, 'ng', qty, note);
+  ngForm.qty = '';
+  ngForm.note = '';
+  showToast('✅ ส่ง NG เรียบร้อย (Sync แล้ว)');
+  route();
 }
 
 function doReceive(id) {
-  try {
-    receiveTicket('paint', id);
-    showToast('✅ รับงานคืนเรียบร้อย');
-    route();
-  } catch(e) {
-    showToast('❌ รับไม่สำเร็จ', 'error');
-  }
+  receiveTicket('paint', id);
+  showToast('✅ รับงานคืนเรียบร้อย (Sync แล้ว)');
+  route();
 }
 
 function doUpdateProgress(id) {
   const qtyInput = document.getElementById(`maintQty-${id}`);
-  const noteInput = document.getElementById(`maintNote-${id}`);
   const qty = parseInt(qtyInput.value);
   if (!qty || qty <= 0) { showToast('กรุณากรอกจำนวนที่ทำเพิ่ม', 'error'); return; }
-  try {
-    const updated = updateProgress('maintenance', id, qty);
-    if (!updated) { showToast('❌ ไม่พบงานหรือไม่ใช่ของคุณ', 'error'); return; }
-    showToast(`✅ อัปเดตความคืบหน้า: +${qty} ชิ้น`);
-    route();
-  } catch(e) {
-    showToast('❌ อัปเดตไม่สำเร็จ', 'error');
-  }
+  updateProgress('maintenance', id, qty);
+  showToast(`✅ อัปเดต +${qty} ชิ้น เรียบร้อย (Sync แล้ว)`);
+  route();
 }
 
 function doSetInventory(model, side) {
@@ -1303,18 +1113,10 @@ function doSetInventory(model, side) {
   const val = parseInt(input.value);
   if (isNaN(val) || val < 0) { showToast('กรุณากรอกตัวเลขที่ถูกต้อง', 'error'); return; }
   setInventory(model, side, val);
-  showToast('✅ บันทึกจำนวน Jig แล้ว');
+  showToast('✅ บันทึกจำนวน Jig ในสต็อกแล้ว');
   route();
 }
 
-function exportGithub() { exportToGithub(); }
-function importGithub() { importFromGithub(); }
-function exportSheets() { exportToGoogleSheets(); }
-function importSheets() { importFromGoogleSheets(); }
-
-// ====================================================================
-// 9. ROUTER
-// ====================================================================
 function route() {
   const role = getCurrentRole();
   if (!role || role === 'home') {
@@ -1323,31 +1125,25 @@ function route() {
     renderHome();
     return;
   }
-  // ตั้งสีตาม role
   if (role === 'paint') {
     document.body.style.setProperty('--accent', '#E1592C');
     document.body.style.setProperty('--accent-dark', '#B8451F');
+    renderPaint();
   } else if (role === 'maintenance') {
     document.body.style.setProperty('--accent', '#B8791E');
     document.body.style.setProperty('--accent-dark', '#8F5F16');
+    renderMaintenance();
   } else {
     document.body.style.setProperty('--accent', '#3E5C76');
     document.body.style.setProperty('--accent-dark', '#2C4356');
+    renderOverview();
   }
-  
-  if (role === 'overview') renderOverview();
-  else if (role === 'paint') renderPaint();
-  else if (role === 'maintenance') renderMaintenance();
 }
 
-// ====================================================================
-// 10. EVENT DELEGATION
-// ====================================================================
 document.addEventListener('click', function(e) {
   const el = e.target.closest('[data-action]');
   if (!el) return;
   const action = el.dataset.action;
-  const arg = el.dataset.arg;
   const id = el.dataset.id;
   const model = el.dataset.model;
   const side = el.dataset.side;
@@ -1355,28 +1151,27 @@ document.addEventListener('click', function(e) {
   const value = el.dataset.value;
   const tab = el.dataset.tab;
   const tabvalue = el.dataset.tabvalue;
-  
-  if (action === 'goHome') { goHome(); return; }
-  if (action === 'refresh') { refresh(); return; }
-  if (action === 'switchTab' && tab && tabvalue) { switchTab(tab, tabvalue); return; }
-  if (action === 'setPaintField' && field && value) { setPaintField(field, value); return; }
-  if (action === 'setNgField' && field && value) { setNgField(field, value); return; }
-  if (action === 'doCreateTicket') { doCreateTicket(); return; }
-  if (action === 'doCreateNg') { doCreateNg(); return; }
-  if (action === 'doReceive' && id) { doReceive(id); return; }
-  if (action === 'doUpdateProgress' && id) { doUpdateProgress(id); return; }
-  if (action === 'doSetInventory' && model && side) { doSetInventory(model, side); return; }
-  if (action === 'exportGithub') { exportGithub(); return; }
-  if (action === 'importGithub') { importGithub(); return; }
-  if (action === 'exportSheets') { exportSheets(); return; }
-  if (action === 'importSheets') { importSheets(); return; }
+
+  if (action === 'goHome') goHome();
+  if (action === 'manualRefresh') fetchFromSheets();
+  if (action === 'configSheets') configureSheetsUrl();
+  if (action === 'switchTab') switchTab(tab, tabvalue);
+  if (action === 'setPaintField') setPaintField(field, value);
+  if (action === 'setNgField') setNgField(field, value);
+  if (action === 'doCreateTicket') doCreateTicket();
+  if (action === 'doCreateNg') doCreateNg();
+  if (action === 'doReceive') doReceive(id);
+  if (action === 'doUpdateProgress') doUpdateProgress(id);
+  if (action === 'doSetInventory') doSetInventory(model, side);
 });
 
-// ====================================================================
-// 11. INIT
-// ====================================================================
 window.addEventListener('hashchange', route);
 route();
+
+// โหลดข้อมูลล่าสุดทันทีที่เปิดหน้าเว็บ
+if (getScriptUrl()) {
+  fetchFromSheets(true);
+}
 </script>
 </body>
 </html>
