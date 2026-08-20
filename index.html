@@ -133,6 +133,13 @@ const APP_TOKEN = 'MatcoM1234';
 
 const MODELS = ['D46H', 'D41H', '578W'];
 const SIDES = ['LH', 'RH'];
+
+// แผนก/สิทธิ์การมองเห็นหน้าต่างๆ
+const ROLES = {
+  top:   { label: 'Top Management', allowed: ['overview'] },
+  paint: { label: 'Paint',          allowed: ['overview', 'paint'] },
+  pe:    { label: 'PE',             allowed: ['overview', 'maintenance'] }
+};
 const AGING_WARN_DAYS = 2;   // ค้างเกินกี่วัน -> เตือนสีเหลือง
 const AGING_CRIT_DAYS = 4;   // ค้างเกินกี่วัน -> เตือนสีแดง
 const POLL_INTERVAL_MS = 15000;
@@ -146,23 +153,39 @@ let syncStatus = 'idle';    // idle | syncing | error
 // ====================================================================
 function getUserName() { return localStorage.getItem('jig_user_name') || ''; }
 function setUserName(name) { localStorage.setItem('jig_user_name', name.trim()); }
+function getUserRole() { return localStorage.getItem('jig_user_role') || ''; }
+function setUserRole(role) { localStorage.setItem('jig_user_role', role); }
 
 function renderUserGate() {
+  const preselected = uiState_gateRole || '';
   document.getElementById('app').innerHTML = `
     <div class="gate-wrap">
       <p class="eyebrow">Digital Factory Hub</p>
       <h1>กรอกชื่อผู้ใช้งานก่อนเข้าระบบ</h1>
       <p style="color:var(--ink-soft); font-size:13px;">ใช้สำหรับบันทึกว่าใครเป็นคนทำรายการ (ตรวจสอบย้อนหลังได้)</p>
       <input id="gateName" placeholder="เช่น สมชาย (Paint กะเช้า)" maxlength="50">
+      <div class="field" style="text-align:left; margin-top:4px;">
+        <label>เลือกแผนก</label>
+        <div class="chip-row" id="gateRoleRow">
+          ${Object.entries(ROLES).map(([key, r]) => `<button type="button" class="chip ${key===preselected?'chip-active':''}" data-role="${key}" onclick="selectGateRole('${key}')">${r.label}</button>`).join('')}
+        </div>
+      </div>
       <button class="save-btn" onclick="submitUserGate()">เข้าสู่ระบบ</button>
     </div>
   `;
   document.getElementById('gateName').focus();
 }
+let uiState_gateRole = '';
+window.selectGateRole = function(key) {
+  uiState_gateRole = key;
+  document.querySelectorAll('#gateRoleRow .chip').forEach(b => b.classList.toggle('chip-active', b.dataset.role === key));
+};
 window.submitUserGate = function() {
   const v = document.getElementById('gateName').value.trim();
   if (!v) { showToast('กรุณากรอกชื่อ', true); return; }
+  if (!uiState_gateRole || !ROLES[uiState_gateRole]) { showToast('กรุณาเลือกแผนก', true); return; }
   setUserName(v);
+  setUserRole(uiState_gateRole);
   boot();
 };
 
@@ -399,12 +422,20 @@ function fmtTime(iso) {
 let uiState = { paintTab: 'send', maintTab: 'todo', form: { model: MODELS[0], side: SIDES[0] } };
 
 window.route = function() {
-  if (!getUserName()) { renderUserGate(); return; }
-  const hash = window.location.hash;
-  if (hash !== '#overview') { document.body.classList.remove('desktop-fit'); }
-  if (hash === '#paint') renderPaint();
-  else if (hash === '#maintenance') renderMaint();
-  else if (hash === '#overview') renderOverview();
+  if (!getUserName() || !getUserRole()) { renderUserGate(); return; }
+
+  const allowed = (ROLES[getUserRole()] && ROLES[getUserRole()].allowed) || ['overview'];
+  let hash = (window.location.hash || '#home').slice(1);
+
+  // role ที่มีสิทธิ์เห็นแค่หน้าเดียว -> ข้ามเมนูหลักไปหน้านั้นเลย
+  if (hash === 'home' && allowed.length === 1) { window.location.hash = allowed[0]; return; }
+  // กันเข้าหน้าที่ role ไม่มีสิทธิ์ (hash ค้างจากตอนเปลี่ยน role หรือพิมพ์ URL เอง)
+  if (hash !== 'home' && !allowed.includes(hash)) { window.location.hash = 'home'; return; }
+
+  if (hash !== 'overview') { document.body.classList.remove('desktop-fit'); }
+  if (hash === 'paint') renderPaint();
+  else if (hash === 'maintenance') renderMaint();
+  else if (hash === 'overview') renderOverview();
   else renderHome();
   renderUserPill();
 };
@@ -412,26 +443,34 @@ window.route = function() {
 function renderUserPill() {
   let el = document.getElementById('userPill');
   if (!el) { el = document.createElement('div'); el.id = 'userPill'; el.className = 'user-pill'; document.body.appendChild(el); }
-  el.textContent = '👤 ' + getUserName() + ' (เปลี่ยน)';
-  el.onclick = () => { if (confirm('เปลี่ยนชื่อผู้ใช้งาน?')) { localStorage.removeItem('jig_user_name'); route(); } };
+  const roleLabel = (ROLES[getUserRole()] && ROLES[getUserRole()].label) || '';
+  el.textContent = '👤 ' + getUserName() + (roleLabel ? ' · ' + roleLabel : '') + ' (เปลี่ยน)';
+  el.onclick = () => { if (confirm('เปลี่ยนชื่อผู้ใช้งาน/แผนก?')) { localStorage.removeItem('jig_user_name'); localStorage.removeItem('jig_user_role'); route(); } };
 }
 
 function renderHome() {
+  const allowed = (ROLES[getUserRole()] && ROLES[getUserRole()].allowed) || ['overview'];
+  const cards = [];
+  if (allowed.includes('overview')) cards.push(`
+      <a class="role-card role-overview" href="#overview">
+        <span class="role-tag">Management</span><h2>ภาพรวม / Dashboard</h2><p>(สำหรับผู้บริหาร) ดูสรุปข้อมูล % ความสำเร็จ</p>
+      </a>`);
+  if (allowed.includes('paint')) cards.push(`
+      <a class="role-card role-paint" href="#paint">
+        <span class="role-tag">Production</span><h2>ฝ่าย PAINT (พ่นสี)</h2><p>ส่งงาน / รับงานคืนกลับ Stock</p>
+      </a>`);
+  if (allowed.includes('maintenance')) cards.push(`
+      <a class="role-card role-maintenance" href="#maintenance">
+        <span class="role-tag">Support</span><h2>ฝ่าย PE</h2><p>รับงานและอัปเดตยอดซ่อมเสร็จ</p>
+      </a>`);
+
   document.getElementById('app').innerHTML = `
     <div class="home-wrap">
       <div class="home-head">
         <p class="eyebrow">Digital Factory Hub</p>
         <h1>ระบบติดตามสถานะ Modify Jig</h1>
       </div>
-      <a class="role-card role-overview" href="#overview">
-        <span class="role-tag">Management</span><h2>ภาพรวม / Dashboard</h2><p>(สำหรับผู้บริหาร) ดูสรุปข้อมูล % ความสำเร็จ</p>
-      </a>
-      <a class="role-card role-paint" href="#paint">
-        <span class="role-tag">Production</span><h2>ฝ่าย PAINT (พ่นสี)</h2><p>ส่งงาน / รับงานคืนกลับ Stock</p>
-      </a>
-      <a class="role-card role-maintenance" href="#maintenance">
-        <span class="role-tag">Support</span><h2>ฝ่าย PE</h2><p>รับงานและอัปเดตยอดซ่อมเสร็จ</p>
-      </a>
+      ${cards.join('')}
     </div>
   `;
 }
