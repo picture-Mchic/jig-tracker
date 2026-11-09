@@ -142,8 +142,13 @@ const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOKoAWg1m7AP
 // 👉 ต้องตรงกับ APP_TOKEN ใน Code.gs ทุกตัวอักษร
 const APP_TOKEN = 'MatcoM1234';
 
-const MODELS = ['D46H', 'D41H', '578W'];
+const MODELS = ['D46H', 'D41H', '578W', 'New Drum'];
 const SIDES = ['LH', 'RH'];
+// รุ่นที่ไม่มีข้างซ้าย/ขวา -> ใช้ค่า side = '-' ใน Sheet (1 แถวต่อรุ่น)
+const NO_SIDE = '-';
+const NO_SIDE_MODELS = ['New Drum'];
+function sidesOf(m) { return NO_SIDE_MODELS.includes(m) ? [NO_SIDE] : SIDES; }
+function sideLabel(s) { return s === NO_SIDE ? '' : s; }
 
 // แผนก/สิทธิ์การมองเห็นหน้าต่างๆ
 const ROLES = {
@@ -545,20 +550,20 @@ function renderOverview() {
 
   let modelsHtml = MODELS.map(m => {
     let modelSent = 0, modelDone = 0, modelStock = 0;
-    let sideHtml = SIDES.map(s => {
+    let sideHtml = sidesOf(m).map(s => {
       let st = getConsolidatedStats(m, s);
       let inv = getInventory(m, s);
       allSent += st.sent; allDone += st.done; allStock += inv;
       modelSent += st.sent; modelDone += st.done; modelStock += inv;
       if (st.oldestPendingAt && (!oldestGlobal || new Date(st.oldestPendingAt) < new Date(oldestGlobal))) {
-        oldestGlobal = st.oldestPendingAt; oldestGlobalKey = `${m} ${s}`;
+        oldestGlobal = st.oldestPendingAt; oldestGlobalKey = `${m} ${sideLabel(s)}`.trim();
       }
       let pctDone = st.sent > 0 ? Math.round((st.done / st.sent) * 100) : 0;
 
       return `
         <div style="margin-bottom: 24px; border-bottom: 1px solid var(--line); padding-bottom: 16px;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-            <div style="font-size: 16px; font-weight: 700;">${s === 'LH' ? 'LH (ซ้าย)' : 'RH (ขวา)'} ${st.oldestPendingAt ? agingBadge(st.oldestPendingAt) : ''}</div>
+            <div style="font-size: 16px; font-weight: 700;">${s === 'LH' ? 'LH (ซ้าย)' : s === 'RH' ? 'RH (ขวา)' : 'ไม่แยกซ้าย/ขวา'} ${st.oldestPendingAt ? agingBadge(st.oldestPendingAt) : ''}</div>
             <div style="text-align: right;">
               <div style="font-size:10px; color:var(--ink-soft); text-transform:uppercase;">Jig ทั้งหมดใน Stock</div>
               <div class="dash-stock">${inv}</div>
@@ -695,7 +700,7 @@ function renderPaint() {
         const canCancel = t.completedQty === 0 && t.receivedQty === 0;
         return `<div class="ticket-row">
           <div class="tr-main">
-            <div class="tr-model">${t.model} ${t.side} ${isNg ? '<span style="color:red">(NG)</span>' : ''} ${agingBadge(t.createdAt)}</div>
+            <div class="tr-model">${t.model} ${sideLabel(t.side)} ${isNg ? '<span style="color:red">(NG)</span>' : ''} ${agingBadge(t.createdAt)}</div>
             ${t.note ? `<div class="tr-note">📝 ${escapeHtml(t.note)}</div>` : ''}
             <div class="tr-by">โดย ${escapeHtml(t.createdBy || '-')} • <span class="tr-time">${fmtTime(t.createdAt)}</span></div>
           </div>
@@ -710,11 +715,11 @@ function renderPaint() {
     content = `
       <div class="form-card">
         <div class="field"><label>1. เลือกรุ่นรถ (Model)</label>
-          <div class="chip-row">${MODELS.map(m => `<button class="chip ${m===uiState.form.model?'chip-active':''}" onclick="uiState.form.model='${m}';route()">${m}</button>`).join('')}</div>
+          <div class="chip-row">${MODELS.map(m => `<button class="chip ${m===uiState.form.model?'chip-active':''}" onclick="uiState.form.model='${m}'; uiState.form.side=sidesOf('${m}')[0]; route()">${m}</button>`).join('')}</div>
         </div>
-        <div class="field"><label>2. เลือกข้าง (Side)</label>
+        ${NO_SIDE_MODELS.includes(uiState.form.model) ? '' : `<div class="field"><label>2. เลือกข้าง (Side)</label>
           <div class="chip-row">${SIDES.map(s => `<button class="chip ${s===uiState.form.side?'chip-active':''}" onclick="uiState.form.side='${s}';route()">${s}</button>`).join('')}</div>
-        </div>
+        </div>`}
         <div class="field"><label>3. จำนวนชิ้น (Qty)</label><input type="number" id="formQty" placeholder="ระบุตัวเลข" min="1"></div>
         <div class="field"><label>4. หมายเหตุ (Note)</label><input type="text" id="formNote" placeholder="${isNg ? 'อาการ NG เช่น เบ้าแตก' : 'เช่น ส่งของล็อตเช้า'}"></div>
         <button class="save-btn ${isNg?'ng-btn':''}" onclick="submitTicket('${isNg?'ng':'normal'}', this)">${isNg ? 'บันทึกส่งซ่อม NG' : 'บันทึกส่งงานปกติ'}</button>
@@ -723,13 +728,13 @@ function renderPaint() {
     `;
   } else if (tab === 'receive') {
     let readyHtml = [];
-    MODELS.forEach(m => SIDES.forEach(s => {
+    MODELS.forEach(m => sidesOf(m).forEach(s => {
       let st = getConsolidatedStats(m, s);
       if (st.readyForPaint > 0) {
         readyHtml.push(`
           <div class="cons-card">
             <div class="cons-head">
-              <span class="cons-title">${m} <span class="cons-sub">${s}</span></span>
+              <span class="cons-title">${m} <span class="cons-sub">${sideLabel(s)}</span></span>
               <span style="font-size:12px; font-weight:700; color:var(--accent-maint); background:#FEF3C7; padding:4px 8px; border-radius:12px;">PE ส่งคืน</span>
             </div>
             <div class="cons-stat-row">
@@ -745,9 +750,9 @@ function renderPaint() {
     }));
     content = readyHtml.length > 0 ? readyHtml.join('') : '<div style="text-align:center;color:#64748B;padding:20px;">ไม่มีงานรอรับคืนจาก PE</div>';
   } else {
-    content = MODELS.map(m => SIDES.map(s => `
+    content = MODELS.map(m => sidesOf(m).map(s => `
       <div class="form-card" style="display:flex;align-items:center;gap:12px;padding:12px;">
-        <div style="flex:1;font-weight:600;font-size:16px;">${m} <span class="cons-sub">${s}</span></div>
+        <div style="flex:1;font-weight:600;font-size:16px;">${m} <span class="cons-sub">${sideLabel(s)}</span></div>
         <input type="number" id="inv_${m}_${s}" value="${getInventory(m,s)}" min="0" style="width:100px;padding:12px;border:1px solid #E2E8F0;border-radius:6px;text-align:center;font-size:16px; margin-bottom:0;">
         <button class="save-btn" style="width:auto;padding:12px 20px;" onclick="setInventory('${m}','${s}',document.getElementById('inv_${m}_${s}').value, this)">บันทึก</button>
       </div>
@@ -774,14 +779,14 @@ function renderPaint() {
 
 function renderMaint() {
   let maintHtml = [];
-  MODELS.forEach(m => SIDES.forEach(s => {
+  MODELS.forEach(m => sidesOf(m).forEach(s => {
     let st = getConsolidatedStats(m, s);
     if (st.pendingMaint > 0) {
       let isNg = st.ngPending > 0;
       maintHtml.push(`
         <div class="cons-card" style="${isNg ? 'border-left-color: var(--red);' : ''}">
           <div class="cons-head">
-            <span class="cons-title">${m} <span class="cons-sub">${s}</span> ${st.oldestPendingAt ? agingBadge(st.oldestPendingAt) : ''}</span>
+            <span class="cons-title">${m} <span class="cons-sub">${sideLabel(s)}</span> ${st.oldestPendingAt ? agingBadge(st.oldestPendingAt) : ''}</span>
             ${isNg ? '<span style="background:var(--red);color:#fff;font-size:10px;padding:4px 8px;border-radius:12px;font-weight:bold;">มี NG ค้าง</span>' : ''}
           </div>
           <div class="cons-stat-row">
