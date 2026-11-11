@@ -965,11 +965,14 @@ function renderOverviewTV() {
     const pct = items.length ? Math.round(sop / items.length * 100) : 0;
     const bar = PLAN_STATUS_FLOW.filter(x => counts[x.key]).map(x => `<div style="width:${counts[x.key] / items.length * 100}%;background:${x.color}"></div>`).join('');
     const chips = PLAN_STATUS_TOP_DOWN.map(x => `<div class="tv-chip ${counts[x.key] ? '' : 'zero'}" style="--sc:${x.color}"><b>${counts[x.key]}</b><span>${x.key}</span></div>`).join('');
-    const rows = items.map(it => {
+    const rank = it => { const c = cur(it); const i = PLAN_STATUS_TOP_DOWN.findIndex(x => x.key === (c ? c.status : 'Pending')); return i < 0 ? 99 : i; };
+    // มี status ก้าวหน้าแล้วขึ้นบน: เรียง Shipment → SOP → ... → Pending (ในสถานะเดียวกันเรียงตามลำดับแผน)
+    const sorted = items.slice().sort((x, y) => rank(x) - rank(y) || x.no - y.no);
+    const rows = sorted.map(it => {
       const c = cur(it), st = c ? c.status : 'Pending';
       const idx = PLAN_STATUS_FLOW.findIndex(x => x.key === st), col = statusColor(st);
       const dots = PLAN_STATUS_FLOW.map((x, i) => `<i style="${i <= idx ? 'background:' + col : ''}"></i>`).join('');
-      return `<div class="tv-item"><span class="no">${it.no}</span><span class="color">${escapeHtml(it.color)}</span><span class="dots">${dots}</span>
+      return `<div class="tv-item"><span class="color">${escapeHtml(it.color)}</span><span class="dots">${dots}</span>
         <span class="pill" style="--sc:${col}">${st}</span>
         <span class="dt ${c ? '' : 'none'}">${c ? c.date.slice(8) + '/' + c.date.slice(5, 7) : '—'}</span></div>`;
     }).join('');
