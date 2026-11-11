@@ -128,6 +128,131 @@
     .gate-wrap h1 { font-family: 'Oswald', sans-serif; font-size: 22px; }
     .gate-wrap input { width: 100%; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius-sm); font-size: 16px; margin: 16px 0; text-align: center; }
     .user-pill { position: fixed; top: 8px; right: 8px; background: rgba(0,0,0,0.55); color: #fff; font-size: 11px; padding: 5px 10px; border-radius: 14px; z-index: 40; cursor: pointer; }
+
+    /* ===== PLAN (แผนการผลิต) ===== */
+    .bg-plan { background: linear-gradient(135deg, #0F766E, #134E4A); }
+    .role-card.role-plan { --card-accent: #0F766E; }
+    .m-718W { --mc:#3B6FD4; } .m-578W { --mc:#6AA43A; } .m-D46H { --mc:#7B2FBE; }
+    .mbadge { display:inline-block; min-width:52px; white-space:nowrap; text-align:center; padding:3px 8px; border-radius:6px; font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700; color:#fff; background:var(--mc,#64748B); }
+    .plan-bar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+    .plan-bar input[type=date], .plan-bar select { padding:9px 10px; border:1px solid var(--line); border-radius:var(--radius-sm); font-size:14px; font-family:'IBM Plex Mono',monospace; background:#fff; }
+    .sum-strip { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:14px; }
+    .sum-cell { background:#fff; border:1px solid var(--line); border-top:4px solid var(--sc,#94A3B8); border-radius:8px; padding:6px 4px; text-align:center; }
+    .sum-cell .v { font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:18px; display:block; }
+    .sum-cell .l { font-size:10px; color:var(--ink-soft); }
+    .plan-row { display:flex; align-items:center; gap:10px; background:#fff; border:1px solid var(--line); border-radius:8px; padding:10px 12px; margin-bottom:6px; flex-wrap:wrap; }
+    .plan-row .no { font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); width:22px; text-align:right; }
+    .plan-row .color { font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:15px; min-width:70px; }
+    .plan-row .grow { flex:1; min-width:10px; }
+    .plan-row select { padding:8px; border:1px solid var(--line); border-radius:6px; font-size:14px; background:#fff; }
+    .plan-row .go { padding:8px 14px; background:#0F766E; color:#fff; border:none; border-radius:6px; font-weight:700; font-size:13px; cursor:pointer; }
+    .spill { display:inline-block; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:700; color:#fff; background:var(--sc,#94A3B8); white-space:nowrap; }
+    .spill small { font-weight:500; opacity:.85; margin-left:4px; }
+    .mx-wrap { overflow-x:auto; background:#fff; border:1px solid var(--line); border-radius:var(--radius); }
+    table.mx { border-collapse:separate; border-spacing:0; width:max-content; min-width:100%; font-size:12px; }
+    table.mx th, table.mx td { border-bottom:1px solid var(--line); border-right:1px solid var(--line); padding:6px; vertical-align:top; }
+    table.mx thead th { background:#134E4A; color:#fff; text-align:center; font-family:'IBM Plex Mono',monospace; font-size:13px; position:sticky; top:0; min-width:92px; }
+    table.mx thead th small { display:block; font-weight:500; opacity:.7; font-size:10px; }
+    table.mx th.st { position:sticky; left:0; z-index:2; text-align:left; min-width:104px; background:#fff; border-left:6px solid var(--sc); font-family:'Inter',sans-serif; font-size:13px; font-weight:700; }
+    table.mx thead th.st { background:#134E4A; z-index:3; border-left:6px solid #134E4A; }
+    table.mx td { min-width:92px; }
+    .mx-chip { display:block; margin:0 0 4px; padding:3px 6px; border-radius:5px; background:var(--mc,#64748B); color:#fff; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; white-space:nowrap; }
+    .mx-chip.edit { cursor:pointer; }
+    .mx-chip i { font-style:normal; opacity:.75; margin-right:4px; }
+    .month-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+    .month-nav button { background:#fff; border:1px solid var(--line); border-radius:20px; padding:6px 14px; font-weight:700; cursor:pointer; }
+    .month-nav .mt { font-family:'Oswald',sans-serif; font-size:20px; }
+
+    /* ===== TV / PC 16:9 Overview (stage 1920x1080 ปรับสเกลให้พอดีจอ) ===== */
+    body.tv-mode { margin:0; overflow:hidden; height:100vh; background:#0B1220; }
+    .tv-stage { position:absolute; left:0; top:0; width:1920px; height:1080px; transform-origin:0 0; padding:20px 28px; color:#F1F5F9; background:#0B1220; display:flex; flex-direction:column; gap:14px; font-family:'Inter',system-ui,sans-serif; }
+    .tv-stage .m-718W { --mc:#6B9BFF; } .tv-stage .m-578W { --mc:#8BCB55; } .tv-stage .m-D46H { --mc:#B66CF5; }
+    .tv-head { display:flex; align-items:center; gap:24px; height:52px; padding-right:300px; }
+    .tv-head h1 { font-family:'Oswald',sans-serif; font-size:34px; margin:0; letter-spacing:.5px; flex:1; }
+    .tv-head button { background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:#fff; border-radius:20px; padding:8px 18px; font-size:15px; font-weight:600; cursor:pointer; }
+    .tv-head .clock { font-family:'IBM Plex Mono',monospace; font-size:30px; font-weight:700; }
+    .tv-head .sync-indicator { margin:0; font-size:13px; }
+    .tv-kpis { display:grid; grid-template-columns:repeat(7,1fr); gap:12px; height:96px; }
+    .tv-kpi { background:#131F38; border:1px solid #24324F; border-radius:12px; padding:10px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px; overflow:hidden; }
+    .tv-kpi .l { font-size:14px; color:#94A3B8; line-height:1.25; }
+    .tv-kpi .v { font-family:'IBM Plex Mono',monospace; font-size:38px; font-weight:700; line-height:1; }
+    .tv-sec { font-family:'Oswald',sans-serif; font-size:20px; color:#94A3B8; letter-spacing:.5px; margin:0 0 8px; }
+    .tv-plan { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+    .tv-col { background:#131F38; border:1px solid #24324F; border-radius:12px; padding:14px 16px; }
+    .tv-col-head { display:flex; align-items:center; justify-content:space-between; }
+    .tv-col-head .t { font-family:'Oswald',sans-serif; font-size:32px; font-weight:700; color:var(--mc); }
+    .tv-col-head .sop { text-align:right; font-size:13px; color:#94A3B8; }
+    .tv-col-head .sop b { display:block; font-family:'IBM Plex Mono',monospace; font-size:22px; color:#F1F5F9; }
+    .tv-bar { display:flex; height:8px; border-radius:4px; overflow:hidden; background:#24324F; margin:10px 0; }
+    .tv-chips { display:grid; grid-template-columns:repeat(8,1fr); gap:4px; margin-bottom:8px; }
+    .tv-chip { text-align:center; border-top:3px solid var(--sc); background:#0F1A31; border-radius:5px; padding:3px 0; }
+    .tv-chip b { display:block; font-family:'IBM Plex Mono',monospace; font-size:18px; line-height:1.2; }
+    .tv-chip span { font-size:10px; color:#94A3B8; white-space:nowrap; }
+    .tv-chip.zero b { color:#3B4A6B; }
+    .tv-item { display:flex; align-items:center; gap:10px; height:27px; border-bottom:1px solid #1B2944; }
+    .tv-item .no { width:26px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:14px; color:#64748B; }
+    .tv-item .color { width:96px; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:18px; }
+    .tv-item .dots { display:flex; gap:2px; }
+    .tv-item .dots i { width:12px; height:8px; border-radius:2px; background:rgba(255,255,255,.12); }
+    .tv-item .pill { margin-left:auto; min-width:92px; text-align:center; padding:2px 10px; border-radius:11px; font-size:14px; font-weight:700; color:#fff; background:var(--sc); }
+    .tv-item .dt { width:54px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:16px; color:#CBD5E1; }
+    .tv-item .dt.none { color:#3B4A6B; }
+    .tv-jig { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; }
+    .tv-jcard { background:#131F38; border:1px solid #24324F; border-radius:12px; padding:10px 14px; }
+    .tv-jcard .top { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+    .tv-jcard .name { font-family:'Oswald',sans-serif; font-size:24px; font-weight:700; color:#A5B4FC; }
+    .tv-jcard .stock { text-align:right; font-size:11px; color:#94A3B8; }
+    .tv-jcard .stock b { display:block; font-family:'IBM Plex Mono',monospace; font-size:24px; color:#F1F5F9; line-height:1; }
+    .tv-side { border-top:1px solid #24324F; padding:6px 0 4px; }
+    .tv-side .sl { font-size:13px; font-weight:700; color:#CBD5E1; margin-bottom:3px; display:flex; align-items:center; gap:6px; }
+    .tv-side .nums { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; text-align:center; }
+    .tv-side .nums b { display:block; font-family:'IBM Plex Mono',monospace; font-size:22px; line-height:1.1; }
+    .tv-side .nums span { font-size:10px; color:#94A3B8; }
+    .tv-side .pb { height:5px; background:#24324F; border-radius:3px; margin-top:5px; overflow:hidden; }
+    .tv-side .pb div { height:100%; background:#6366F1; }
+
+    /* ===== LIQUID GLASS override (TV overview) ===== */
+    body.tv-mode { background:#070B18; }
+    .tv-stage {
+      background:
+        radial-gradient(820px 560px at 6% -4%,  rgba(99,102,241,.70), transparent 62%),
+        radial-gradient(760px 560px at 96% 4%,  rgba(20,184,166,.55), transparent 62%),
+        radial-gradient(900px 640px at 62% 104%, rgba(168,85,247,.55), transparent 62%),
+        radial-gradient(640px 520px at -2% 92%, rgba(37,99,235,.50), transparent 62%),
+        radial-gradient(520px 380px at 48% 46%, rgba(236,72,153,.16), transparent 70%),
+        #0A1020;
+    }
+    .tv-kpi, .tv-col, .tv-jcard {
+      background: linear-gradient(135deg, rgba(255,255,255,.17) 0%, rgba(255,255,255,.05) 45%, rgba(255,255,255,.09) 100%);
+      -webkit-backdrop-filter: blur(24px) saturate(185%); backdrop-filter: blur(24px) saturate(185%);
+      border: 1px solid rgba(255,255,255,.24);
+      box-shadow: inset 0 1.5px 0 rgba(255,255,255,.45), inset 0 -1px 0 rgba(255,255,255,.06), inset 1px 0 0 rgba(255,255,255,.12), 0 10px 36px rgba(2,6,23,.40);
+      border-radius: 22px;
+    }
+    .tv-kpi { border-radius: 20px; }
+    .tv-head button {
+      background: linear-gradient(180deg, rgba(255,255,255,.26), rgba(255,255,255,.08));
+      -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,.35); box-shadow: inset 0 1px 0 rgba(255,255,255,.5), 0 4px 14px rgba(2,6,23,.3);
+    }
+    .tv-head h1 { text-shadow: 0 2px 18px rgba(255,255,255,.25); }
+    .tv-sec { color: rgba(255,255,255,.72); }
+    .tv-kpi .l, .tv-col-head .sop, .tv-jcard .stock, .tv-chip span, .tv-side .nums span { color: rgba(226,232,240,.75); }
+    .tv-bar, .tv-side .pb { background: rgba(255,255,255,.14); box-shadow: inset 0 1px 2px rgba(0,0,0,.25); }
+    .tv-chip { background: rgba(255,255,255,.08); border-top-width: 3px; box-shadow: inset 0 1px 0 rgba(255,255,255,.18); }
+    .tv-chip.zero b { color: rgba(255,255,255,.28); }
+    .tv-item { border-bottom: 1px solid rgba(255,255,255,.09); }
+    .tv-item .no { color: rgba(226,232,240,.5); }
+    .tv-item .dots i { background: rgba(255,255,255,.16); }
+    .tv-item .dt.none { color: rgba(255,255,255,.28); }
+    .tv-item .pill {
+      background: linear-gradient(180deg, rgba(255,255,255,.38), rgba(255,255,255,0) 58%), var(--sc);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 2px 10px rgba(2,6,23,.30); text-shadow: 0 1px 2px rgba(0,0,0,.25);
+    }
+    .tv-side { border-top: 1px solid rgba(255,255,255,.12); }
+    .tv-side .pb div { background: linear-gradient(90deg, #818CF8, #A78BFA); }
+    .tv-jcard .name { color: #C7D2FE; }
+    .tv-stage .aging-ok { background: rgba(255,255,255,.18); color: #E2E8F0; }
   </style>
 </head>
 <body>
@@ -142,20 +267,22 @@ const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOKoAWg1m7AP
 // 👉 ต้องตรงกับ APP_TOKEN ใน Code.gs ทุกตัวอักษร
 const APP_TOKEN = 'MatcoM1234';
 
-const MODELS = ['D46H', 'D41H', '578W', 'New Drum'];
+const MODELS = ['D46H', 'D41H', '578W', 'New Drum', 'Drum D46H'];
 const SIDES = ['LH', 'RH'];
 // รุ่นที่ไม่มีข้างซ้าย/ขวา -> ใช้ค่า side = '-' ใน Sheet (1 แถวต่อรุ่น)
 const NO_SIDE = '-';
-const NO_SIDE_MODELS = ['New Drum'];
+const NO_SIDE_MODELS = ['New Drum', 'Drum D46H'];
 function sidesOf(m) { return NO_SIDE_MODELS.includes(m) ? [NO_SIDE] : SIDES; }
 function sideLabel(s) { return s === NO_SIDE ? '' : s; }
 
 // แผนก/สิทธิ์การมองเห็นหน้าต่างๆ
 const ROLES = {
-  top:   { label: 'Top Management', allowed: ['overview'] },
-  paint: { label: 'Paint',          allowed: ['overview', 'paint'] },
-  pe:    { label: 'PE',             allowed: ['overview', 'maintenance'] }
+  top:   { label: 'Top Management', allowed: ['overview', 'plan'] },
+  paint: { label: 'Paint (Production)', allowed: ['overview', 'paint', 'plan'] },
+  pe:    { label: 'PE',             allowed: ['overview', 'maintenance', 'plan'] }
 };
+// ใครแก้ไข Status ในหน้าแผนได้บ้าง (Paint = Production เป็นคนกรอก)
+const PLAN_EDIT_ROLES = ['paint'];
 const AGING_WARN_DAYS = 2;   // ค้างเกินกี่วัน -> เตือนสีเหลือง
 const AGING_CRIT_DAYS = 4;   // ค้างเกินกี่วัน -> เตือนสีแดง
 const POLL_INTERVAL_MS = 15000;
@@ -501,13 +628,197 @@ window.route = function() {
   // กันเข้าหน้าที่ role ไม่มีสิทธิ์ (hash ค้างจากตอนเปลี่ยน role หรือพิมพ์ URL เอง)
   if (hash !== 'home' && !allowed.includes(hash)) { window.location.hash = 'home'; return; }
 
-  if (hash !== 'overview') { document.body.classList.remove('desktop-fit'); }
+  if (hash !== 'overview') { document.body.classList.remove('desktop-fit'); document.body.classList.remove('tv-mode'); }
   if (hash === 'paint') renderPaint();
   else if (hash === 'maintenance') renderMaint();
   else if (hash === 'overview') renderOverview();
+  else if (hash === 'plan') renderPlan();
   else renderHome();
   renderUserPill();
 };
+
+
+// ====================================================================
+// PLAN — แผนการผลิต + Status รายวัน (Production เป็นคนกรอก)
+// ====================================================================
+// Drum D46H อยู่ในแผนด้วย (สีม่วง) ร่วมกับ 718W (น้ำเงิน) และ 578W (เขียว)
+const PLAN_ITEMS = [
+  [1,'718W','218'],[2,'578W','218'],[3,'D46H','218'],[4,'718W','R77'],[5,'578W','218BP'],
+  [6,'D46H','B88'],[7,'718W','1G3'],[8,'578W','089BP'],[9,'D46H','1K0'],[10,'718W','040'],
+  [11,'578W','1L0'],[12,'D46H','S44'],[13,'718W','1K0'],[14,'578W','3U5'],[15,'D46H','089'],
+  [16,'718W','S44'],[17,'578W','8X8'],[18,'718W','089'],[19,'578W','1G3BP'],[20,'718W','3R3'],
+  [21,'578W','1K0'],[22,'718W','229'],[23,'578W','1H5'],[24,'718W','1H5'],[25,'578W','089'],
+  [26,'718W','1K3'],[27,'578W','1K3'],[28,'578W','11GY37'],[29,'578W','202'],[30,'578W','040BP']
+].map(a => ({ no: a[0], model: a[1], color: a[2] }));
+const PLAN_MODELS = ['718W', '578W', 'D46H'];
+const MODEL_LABEL = { '718W': '718W', '578W': '578W', 'D46H': 'Drum D46H' };
+
+// เรียงจากบนลงล่างในตาราง: Shipment อยู่บนสุด -> Pending อยู่ล่างสุด
+const PLAN_STATUS_TOP_DOWN = [
+  { key: 'Shipment',   color: '#0F766E' },
+  { key: 'SOP',        color: '#16A34A' },
+  { key: 'QC OK',      color: '#22C55E' },
+  { key: 'QC Check',   color: '#EAB308' },
+  { key: 'Re-trial',   color: '#F97316' },
+  { key: 'Big lot',    color: '#3B82F6' },
+  { key: 'Trial',      color: '#8B5CF6' },
+  { key: 'Pending',    color: '#94A3B8' }
+];
+const PLAN_STATUS_FLOW = [...PLAN_STATUS_TOP_DOWN].reverse(); // ลำดับขั้นตอนจริง ใช้ใน dropdown
+function statusColor(k) { return (PLAN_STATUS_TOP_DOWN.find(x => x.key === k) || {}).color || '#94A3B8'; }
+
+let planState = { entries: [] };   // { id, no, status, date:'YYYY-MM-DD', by, ts }
+let planQueue = [];                // ops ที่ยังไม่ได้ sync ไป server
+let planSyncOk = null;             // null=ยังไม่รู้ true=server รองรับ false=เก็บในเครื่องเท่านั้น
+let planUI = { tab: 'update', model: 'all', date: '', month: '', sel: {} };
+
+function todayStr() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
+function canEditPlan() { return PLAN_EDIT_ROLES.includes(getUserRole()); }
+function planLoadLocal() {
+  try { const r = localStorage.getItem('jig_plan_v1'); if (r) planState = JSON.parse(r); const q = localStorage.getItem('jig_plan_q_v1'); if (q) planQueue = JSON.parse(q); } catch (e) {}
+}
+function planSaveLocal() {
+  localStorage.setItem('jig_plan_v1', JSON.stringify(planState));
+  localStorage.setItem('jig_plan_q_v1', JSON.stringify(planQueue));
+}
+// สถานะปัจจุบันของแต่ละรายการ = entry ล่าสุด (เรียงตามวันที่ แล้วตามเวลาที่กรอก)
+function planCurrent(no) {
+  const list = planState.entries.filter(e => e.no === no).sort((a, b) => (a.date + String(a.ts).padStart(15,'0')).localeCompare(b.date + String(b.ts).padStart(15,'0')));
+  return list.length ? list[list.length - 1] : null;
+}
+
+async function planFlush() {
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('ใส่_URL')) return;
+  while (planQueue.length) {
+    const op = planQueue[0];
+    try {
+      const res = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ ...op, token: APP_TOKEN, by: getUserName() }) });
+      const j = await res.json();
+      if (j.success) { planQueue.shift(); planSyncOk = true; }
+      else { planSyncOk = false; break; }       // server ยังไม่รองรับ action ของแผน -> เก็บในเครื่องไว้
+    } catch (e) { break; }                      // ออฟไลน์ -> retry รอบหน้า
+  }
+  planSaveLocal();
+}
+async function planFetch() {
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('ใส่_URL')) return;
+  await planFlush();
+  if (planQueue.length) return;                 // ยังมีของค้างส่ง ไม่ overwrite
+  try {
+    const res = await fetch(GOOGLE_SCRIPT_URL + '?action=planLoad');
+    const j = await res.json();
+    if (j.success && Array.isArray(j.entries)) { planState.entries = j.entries; planSyncOk = true; planSaveLocal(); }
+    else planSyncOk = false;
+  } catch (e) {}
+}
+setInterval(() => { if (['plan', 'overview'].includes((location.hash || '').slice(1))) planFetch().then(() => { if (!document.activeElement || document.activeElement.tagName !== 'SELECT') route(); }); }, POLL_INTERVAL_MS);
+
+window.planSetStatus = async function(no, btn) {
+  const sel = document.getElementById('pst_' + no);
+  const date = document.getElementById('planDate').value || todayStr();
+  const entry = { id: genOpId(), no, status: sel.value, date, by: getUserName(), ts: Date.now() };
+  delete planUI.sel[no];
+  planState.entries.push(entry);
+  planQueue.push({ action: 'planAdd', entry });
+  planSaveLocal(); route();
+  showToast('✅ บันทึก #' + no + ' → ' + entry.status);
+  planFlush().then(() => route());
+};
+window.planRemove = async function(id) {
+  if (!canEditPlan()) return;
+  if (!confirm('ลบรายการ status นี้ใช่ไหม?')) return;
+  planState.entries = planState.entries.filter(e => e.id !== id);
+  planQueue.push({ action: 'planRemove', id });
+  planSaveLocal(); route();
+  planFlush().then(() => route());
+};
+window.planShiftMonth = function(d) {
+  const [y, m] = planUI.month.split('-').map(Number);
+  const dt = new Date(y, m - 1 + d, 1);
+  planUI.month = dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0');
+  route();
+};
+
+function planChip(item, entry, editable) {
+  return `<span class="mx-chip m-${item.model} ${editable ? 'edit' : ''}" ${editable ? `onclick="planRemove('${entry.id}')" title="แตะเพื่อลบ"` : ''}><i>#${item.no}</i>${MODEL_LABEL[item.model]} · ${escapeHtml(item.color)}</span>`;
+}
+
+function renderPlan() {
+  if (!planUI.date) planUI.date = todayStr();
+  if (!planUI.month) planUI.month = todayStr().slice(0, 7);
+  const editable = canEditPlan();
+  if (!editable && planUI.tab === 'update') planUI.tab = 'matrix';
+  const tab = planUI.tab;
+
+  // สรุปจำนวนตามสถานะปัจจุบัน (ยังไม่เคยกรอก = Pending)
+  const counts = {}; PLAN_STATUS_TOP_DOWN.forEach(s => counts[s.key] = 0);
+  PLAN_ITEMS.forEach(it => { const c = planCurrent(it.no); counts[c ? c.status : 'Pending']++; });
+  const summary = `<div class="sum-strip">${PLAN_STATUS_TOP_DOWN.map(s => `<div class="sum-cell" style="--sc:${s.color}"><span class="v">${counts[s.key]}</span><span class="l">${s.key}</span></div>`).join('')}</div>`;
+
+  let body = '';
+  if (tab === 'update') {
+    const items = PLAN_ITEMS.filter(it => planUI.model === 'all' || it.model === planUI.model);
+    body = `
+      <div class="plan-bar">
+        <label style="font-size:12px;font-weight:600;color:var(--ink-soft);">วันที่บันทึก</label>
+        <input type="date" id="planDate" value="${planUI.date}" onchange="planUI.date=this.value">
+      </div>
+      <div class="chip-row">
+        <button class="chip ${planUI.model==='all'?'chip-active':''}" onclick="planUI.model='all';route()">ทั้งหมด</button>
+        ${PLAN_MODELS.map(m => `<button class="chip ${planUI.model===m?'chip-active':''}" onclick="planUI.model='${m}';route()">${MODEL_LABEL[m]}</button>`).join('')}
+      </div>
+      ${items.map(it => {
+        const c = planCurrent(it.no); const cur = c ? c.status : 'Pending';
+        return `<div class="plan-row">
+          <span class="no">${it.no}</span>
+          <span class="mbadge m-${it.model}">${MODEL_LABEL[it.model]}</span>
+          <span class="color">${escapeHtml(it.color)}</span>
+          <span class="grow"></span>
+          <span class="spill" style="--sc:${statusColor(cur)}">${cur}${c ? `<small>${c.date.slice(8)}/${c.date.slice(5,7)}</small>` : ''}</span>
+          <select id="pst_${it.no}" onchange="planUI.sel[${it.no}]=this.value">${PLAN_STATUS_FLOW.map(s => `<option ${s.key===(planUI.sel[it.no]||cur)?'selected':''}>${s.key}</option>`).join('')}</select>
+          <button class="go" onclick="planSetStatus(${it.no}, this)">บันทึก</button>
+        </div>`;
+      }).join('')}`;
+  } else {
+    // ตารางรายวัน: แถว = status (Shipment บนสุด) / คอลัมน์ = วันที่ในเดือน (ซ่อนวันที่ไม่มี status)
+    const inMonth = planState.entries.filter(e => e.date.slice(0, 7) === planUI.month);
+    const days = [...new Set(inMonth.map(e => e.date))].sort();
+    const [y, m] = planUI.month.split('-').map(Number);
+    const monthName = new Date(y, m - 1, 1).toLocaleDateString('th-TH', { month: 'long', year: 'numeric' });
+    const dow = d => ['อา','จ','อ','พ','พฤ','ศ','ส'][new Date(d + 'T00:00:00').getDay()];
+    let table;
+    if (!days.length) table = `<div style="text-align:center;color:#64748B;padding:40px;background:#fff;border-radius:12px;border:1px solid var(--line);">ยังไม่มี status ในเดือนนี้</div>`;
+    else table = `<div class="mx-wrap"><table class="mx">
+      <thead><tr><th class="st">Status</th>${days.map(d => `<th>${d.slice(8)}<small>${dow(d)}</small></th>`).join('')}</tr></thead>
+      <tbody>${PLAN_STATUS_TOP_DOWN.map(s => `<tr>
+        <th class="st" style="--sc:${s.color}">${s.key}</th>
+        ${days.map(d => {
+          const es = inMonth.filter(e => e.date === d && e.status === s.key).sort((a, b) => a.no - b.no);
+          return `<td>${es.map(e => planChip(PLAN_ITEMS.find(i => i.no === e.no), e, editable)).join('')}</td>`;
+        }).join('')}
+      </tr>`).join('')}</tbody></table></div>
+      ${editable ? '<p style="font-size:11px;color:var(--ink-soft);">แตะที่ป้ายรายการเพื่อลบ status ที่กรอกผิด</p>' : ''}`;
+    body = `
+      <div class="month-nav"><button onclick="planShiftMonth(-1)">◀</button><span class="mt">${monthName}</span><button onclick="planShiftMonth(1)">▶</button></div>
+      ${table}`;
+  }
+
+  const syncTxt = planQueue.length ? `⏳ รอ sync ${planQueue.length} รายการ` : (planSyncOk === false ? '⚠️ เก็บในเครื่องนี้เท่านั้น (Server ยังไม่รองรับแผน)' : '✅ Synced');
+  document.getElementById('app').innerHTML = `
+    <div class="role-header bg-plan">
+      <div class="role-header-top"><button class="home-link" onclick="location.hash='home'">← เมนูหลัก</button><button class="refresh-pill" onclick="planFetch().then(route)">↻ รีเฟรช</button></div>
+      <p class="eyebrow" style="color:rgba(255,255,255,0.7);">Production Plan</p><h1>แผนการผลิต / STATUS</h1>
+      <div class="sync-indicator ${planQueue.length ? 'pending' : (planSyncOk === false ? 'error' : '')}">${syncTxt}</div>
+    </div>
+    <div class="content">
+      ${summary}
+      <div class="tabs">
+        ${editable ? `<button class="tab-btn ${tab==='update'?'active':''}" onclick="planUI.tab='update';route()">กรอก Status</button>` : ''}
+        <button class="tab-btn ${tab==='matrix'?'active':''}" onclick="planUI.tab='matrix';route()">ตารางรายวัน</button>
+      </div>
+      ${body}
+    </div>`;
+}
 
 function renderUserPill() {
   let el = document.getElementById('userPill');
@@ -523,6 +834,10 @@ function renderHome() {
   if (allowed.includes('overview')) cards.push(`
       <a class="role-card role-overview" href="#overview">
         <span class="role-tag">Management</span><h2>ภาพรวม / Dashboard</h2><p>(สำหรับผู้บริหาร) ดูสรุปข้อมูล % ความสำเร็จ</p>
+      </a>`);
+  if (allowed.includes('plan')) cards.push(`
+      <a class="role-card role-plan" href="#plan">
+        <span class="role-tag">Production</span><h2>แผนการผลิต / Status</h2><p>718W · 578W · Drum D46H — Pending → Shipment รายวัน</p>
       </a>`);
   if (allowed.includes('paint')) cards.push(`
       <a class="role-card role-paint" href="#paint">
@@ -544,7 +859,154 @@ function renderHome() {
   `;
 }
 
-function renderOverview() {
+
+// สรุปแผนการผลิตแยกตามรุ่น สำหรับหน้า Overview (นับจากสถานะปัจจุบันของแต่ละรายการ)
+function planOverviewHtml() {
+  const cardFor = (label, items) => {
+    const counts = {}; PLAN_STATUS_TOP_DOWN.forEach(x => counts[x.key] = 0);
+    items.forEach(it => { const c = planCurrent(it.no); counts[c ? c.status : 'Pending']++; });
+    const total = items.length;
+    const sopDone = counts['SOP'] + counts['Shipment'];
+    const pct = total ? Math.round(sopDone / total * 100) : 0;
+    const bar = PLAN_STATUS_FLOW.filter(x => counts[x.key] > 0).map(x => `<div title="${x.key}: ${counts[x.key]}" style="width:${counts[x.key] / total * 100}%;background:${x.color};"></div>`).join('');
+    return { counts, total, sopDone, pct, bar };
+  };
+  const statusGrid = counts => `<div class="sum-strip" style="margin:12px 0 0;">${PLAN_STATUS_TOP_DOWN.map(x => `<div class="sum-cell" style="--sc:${x.color}"><span class="v" style="font-size:16px;${counts[x.key] ? '' : 'color:#CBD5E1;'}">${counts[x.key]}</span><span class="l">${x.key}</span></div>`).join('')}</div>`;
+
+  const modelCards = PLAN_MODELS.map(m => {
+    const items = PLAN_ITEMS.filter(i => i.model === m);
+    const c = cardFor(m, items);
+    return `<div class="model-card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="font-family:Oswald; font-size:22px; font-weight:700; color:var(--mc); border-bottom:2px solid var(--mc); display:inline-block;" class="m-${m}">${MODEL_LABEL[m]}</div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="text-align:right; font-size:10px; color:var(--ink-soft); text-transform:uppercase;">SOP แล้ว<br><b style="font-family:'IBM Plex Mono'; font-size:14px; color:var(--ink);">${c.sopDone} / ${c.total}</b></div>
+          ${progressRingHtml(c.pct, { size: 56, stroke: 6, color: '#0F766E' })}
+        </div>
+      </div>
+      <div style="display:flex; height:10px; border-radius:5px; overflow:hidden; background:var(--line); margin-top:14px;">${c.bar}</div>
+      ${statusGrid(c.counts)}
+    </div>`;
+  }).join('');
+
+  const all = cardFor('all', PLAN_ITEMS);
+  return `
+    <div class="overall-card" style="background:#134E4A;">
+      <div class="overall-title">แผนการผลิต — ทุกรุ่น (Plan Status)</div>
+      <div style="display:flex; align-items:center; gap:20px;">
+        ${progressRingHtml(all.pct, { size: 80, stroke: 8, color: '#5EEAD4', track: 'rgba(255,255,255,0.15)' })}
+        <div style="flex:1;">
+          <div style="font-size:13px; color:#CBD5E1;">SOP แล้ว (SOP + Shipment)</div>
+          <div style="font-family:'IBM Plex Mono'; font-size:26px; font-weight:700;">${all.sopDone} <span style="font-size:14px; color:#94A3B8;">/ ${all.total} รายการ</span></div>
+          <div style="display:flex; height:10px; border-radius:5px; overflow:hidden; background:rgba(255,255,255,0.2); margin-top:8px;">${all.bar}</div>
+        </div>
+      </div>
+    </div>
+    <div class="models-grid" style="margin-bottom:20px;">${modelCards}</div>
+    <div style="font-family:Oswald; font-size:16px; color:#94A3B8; text-transform:uppercase; margin:4px 0 12px;">สถานะ Jig & Drum (ส่งซ่อม)</div>`;
+}
+
+
+// ---- วงกลม % แบบนิ่ง (ไม่ animate) สำหรับจอ TV ที่รีเฟรชทุก 15 วิ ไม่ให้กระพริบ ----
+function staticRing(pct, size, stroke, color, track) {
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r;
+  const v = Math.max(0, Math.min(100, pct || 0)), off = c - v / 100 * c;
+  return `<div class="ring-wrap" style="width:${size}px;height:${size}px;">
+    <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="${track || 'rgba(255,255,255,0.18)'}" stroke-width="${stroke}" fill="none"/>
+      <circle cx="${size/2}" cy="${size/2}" r="${r}" stroke="${color}" stroke-width="${stroke}" fill="none" stroke-linecap="round" stroke-dasharray="${c.toFixed(2)}" stroke-dashoffset="${off.toFixed(2)}" transform="rotate(-90 ${size/2} ${size/2})"/>
+    </svg>
+    <div class="ring-label" style="font-size:${Math.round(size * 0.27)}px;"><span class="n">${v}%</span></div></div>`;
+}
+function fitTV() {
+  const st = document.getElementById('tvStage'); if (!st) return;
+  const sc = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+  st.style.transform = `translate(${(window.innerWidth - 1920 * sc) / 2}px, ${(window.innerHeight - 1080 * sc) / 2}px) scale(${sc})`;
+}
+setInterval(() => { const e = document.getElementById('tvClock'); if (e) e.textContent = new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }); }, 1000);
+
+function renderOverview() { if (window.innerWidth > 900) renderOverviewTV(); else renderOverviewMobile(); }
+
+function renderOverviewTV() {
+  document.body.classList.add('tv-mode'); document.body.classList.remove('desktop-fit');
+  // ----- Jig & Drum totals -----
+  let allSent = 0, allDone = 0, allStock = 0, oldest = null, oldestKey = '';
+  const jigCards = MODELS.map(m => {
+    let mDone = 0, mStock = 0;
+    const sides = sidesOf(m).map(sd => {
+      const st = getConsolidatedStats(m, sd), inv = getInventory(m, sd);
+      allSent += st.sent; allDone += st.done; allStock += inv; mDone += st.done; mStock += inv;
+      if (st.oldestPendingAt && (!oldest || new Date(st.oldestPendingAt) < new Date(oldest))) { oldest = st.oldestPendingAt; oldestKey = `${m} ${sideLabel(sd)}`.trim(); }
+      const pct = st.sent > 0 ? Math.round(st.done / st.sent * 100) : 0;
+      return { sd, st, inv, pct };
+    });
+    const html = sides.map(x => `<div class="tv-side">
+        <div class="sl">${x.sd === 'LH' ? 'LH (ซ้าย)' : x.sd === 'RH' ? 'RH (ขวา)' : 'ไม่แยกซ้าย/ขวา'} <span style="margin-left:auto;font-weight:500;color:#94A3B8;">Stock <b style="font-family:'IBM Plex Mono';color:#F1F5F9;">${x.inv}</b></span> ${x.st.oldestPendingAt ? agingBadge(x.st.oldestPendingAt) : ''}</div>
+        <div class="nums">
+          <div><b>${x.st.sent}</b><span>ส่งซ่อม</span></div>
+          <div><b style="color:#34D399">${x.st.done}</b><span>ซ่อมเสร็จ</span></div>
+          <div><b style="color:#F87171">${x.st.pendingMaint}</b><span>ค้างซ่อม</span></div>
+          <div><b style="color:#FBBF24">${x.st.readyForPaint}</b><span>รอรับคืน</span></div>
+        </div>
+        <div class="pb"><div style="width:${x.pct}%"></div></div></div>`).join('');
+    const mp = mStock > 0 ? Math.round(mDone / mStock * 100) : 0;
+    return `<div class="tv-jcard"><div class="top"><div class="name">${m}</div>${staticRing(mp, 46, 5, '#818CF8')}</div>${html}</div>`;
+  }).join('');
+  const allPctStock = allStock > 0 ? Math.round(allDone / allStock * 100) : 0;
+
+  // ----- Plan (ต่อรุ่น: รายการ + ขั้นตอน + status + วันที่) -----
+  const cur = it => planCurrent(it.no);
+  let planDone = 0;
+  const planCols = PLAN_MODELS.map(m => {
+    const items = PLAN_ITEMS.filter(i => i.model === m);
+    const counts = {}; PLAN_STATUS_TOP_DOWN.forEach(x => counts[x.key] = 0);
+    items.forEach(it => { const c = cur(it); counts[c ? c.status : 'Pending']++; });
+    const sop = counts['SOP'] + counts['Shipment']; planDone += sop;
+    const pct = items.length ? Math.round(sop / items.length * 100) : 0;
+    const bar = PLAN_STATUS_FLOW.filter(x => counts[x.key]).map(x => `<div style="width:${counts[x.key] / items.length * 100}%;background:${x.color}"></div>`).join('');
+    const chips = PLAN_STATUS_TOP_DOWN.map(x => `<div class="tv-chip ${counts[x.key] ? '' : 'zero'}" style="--sc:${x.color}"><b>${counts[x.key]}</b><span>${x.key}</span></div>`).join('');
+    const rows = items.map(it => {
+      const c = cur(it), st = c ? c.status : 'Pending';
+      const idx = PLAN_STATUS_FLOW.findIndex(x => x.key === st), col = statusColor(st);
+      const dots = PLAN_STATUS_FLOW.map((x, i) => `<i style="${i <= idx ? 'background:' + col : ''}"></i>`).join('');
+      return `<div class="tv-item"><span class="no">${it.no}</span><span class="color">${escapeHtml(it.color)}</span><span class="dots">${dots}</span>
+        <span class="pill" style="--sc:${col}">${st}</span>
+        <span class="dt ${c ? '' : 'none'}">${c ? c.date.slice(8) + '/' + c.date.slice(5, 7) : '—'}</span></div>`;
+    }).join('');
+    return `<div class="tv-col m-${m}">
+      <div class="tv-col-head"><div class="t">${MODEL_LABEL[m]}</div>
+        <div style="display:flex;align-items:center;gap:12px;"><div class="sop">SOP แล้ว<b>${sop} / ${items.length}</b></div>${staticRing(pct, 54, 6, '#2DD4BF')}</div></div>
+      <div class="tv-bar">${bar}</div><div class="tv-chips">${chips}</div>${rows}</div>`;
+  }).join('');
+  const planPct = Math.round(planDone / PLAN_ITEMS.length * 100);
+
+  const kpi = (l, v, color) => `<div class="tv-kpi"><div class="l">${l}</div><div class="v" ${color ? `style="color:${color}"` : ''}>${v}</div></div>`;
+  document.getElementById('app').innerHTML = `
+    <div class="tv-stage" id="tvStage">
+      <div class="tv-head">
+        <button onclick="location.hash='home'">← เมนูหลัก</button>
+        <h1>OVERVIEW DASHBOARD</h1>
+        ${syncIndicatorHtml()}
+        <button onclick="planFetch(); fetchFromSheets(false)">↻ รีเฟรช</button>
+        <div class="clock" id="tvClock">${new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}</div>
+      </div>
+      <div class="tv-kpis">
+        ${kpi('Jig ทั้งหมด<br>ใน Stock', allStock)}
+        ${kpi('ส่งซ่อมรวม', allSent)}
+        ${kpi('ซ่อมเสร็จแล้ว', allDone, '#34D399')}
+        ${kpi('ค้างซ่อม (PE)', allSent - allDone, '#F87171')}
+        <div class="tv-kpi"><div class="l">% สำเร็จ<br>เทียบ Stock</div>${staticRing(allPctStock, 64, 7, '#60A5FA')}</div>
+        <div class="tv-kpi"><div class="l">แผน SOP แล้ว<br><b style="font-family:'IBM Plex Mono';font-size:20px;color:#F1F5F9;">${planDone} / ${PLAN_ITEMS.length}</b></div>${staticRing(planPct, 64, 7, '#2DD4BF')}</div>
+        <div class="tv-kpi" style="${oldest ? 'border-color:#7F1D1D;' : ''}"><div class="l">ค้างนานสุด</div><div style="text-align:right;font-weight:700;font-size:18px;">${oldest ? escapeHtml(oldestKey) + '<br>' + agingBadge(oldest) : '—'}</div></div>
+      </div>
+      <div><div class="tv-sec">แผนการผลิต · STATUS &amp; วันที่ (แต่ละรุ่น)</div><div class="tv-plan">${planCols}</div></div>
+      <div><div class="tv-sec">สถานะ Jig &amp; Drum (ส่งซ่อม)</div><div class="tv-jig">${jigCards}</div></div>
+    </div>`;
+  fitTV();
+}
+
+function renderOverviewMobile() {
+  document.body.classList.remove('tv-mode');
   let allSent = 0, allDone = 0, allStock = 0;
   let oldestGlobal = null, oldestGlobalKey = '';
 
@@ -643,6 +1105,7 @@ function renderOverview() {
           </div>
         </div>
         ${escalateHtml}
+        ${planOverviewHtml()}
         <div class="models-grid">${modelsHtml}</div>
       </div>
     </div>
@@ -819,6 +1282,8 @@ function renderMaint() {
 // ====================================================================
 function boot() {
   loadLocal();
+  planLoadLocal();
+  planFetch();
   // เปิดจากจอ PC (>900px) -> เด้งไปหน้า Overview ทันทีเสมอ (ไม่สนใจ hash เดิมที่ค้างไว้)
   if (window.innerWidth > 900) {
     window.location.hash = 'overview';
@@ -835,7 +1300,10 @@ let __resizeTimer;
 window.addEventListener('resize', () => {
   clearTimeout(__resizeTimer);
   __resizeTimer = setTimeout(() => {
-    if (window.location.hash === '#overview') adjustOverviewFit();
+    if (window.location.hash === '#overview') {
+      const wantTV = window.innerWidth > 900;
+      if (wantTV !== document.body.classList.contains('tv-mode')) route(); else fitTV();
+    }
   }, 120);
 });
 
