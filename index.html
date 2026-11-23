@@ -136,7 +136,7 @@
     .mbadge { display:inline-block; min-width:52px; white-space:nowrap; text-align:center; padding:3px 8px; border-radius:6px; font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700; color:#fff; background:var(--mc,#64748B); }
     .plan-bar { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
     .plan-bar input[type=date], .plan-bar select { padding:9px 10px; border:1px solid var(--line); border-radius:var(--radius-sm); font-size:14px; font-family:'IBM Plex Mono',monospace; background:#fff; }
-    .sum-strip { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-bottom:14px; }
+    .sum-strip { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:14px; }
     .sum-cell { background:#fff; border:1px solid var(--line); border-top:4px solid var(--sc,#94A3B8); border-radius:8px; padding:6px 4px; text-align:center; }
     .sum-cell .v { font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:18px; display:block; }
     .sum-cell .l { font-size:10px; color:var(--ink-soft); }
@@ -184,10 +184,10 @@
     .tv-col-head .sop { text-align:right; font-size:13px; color:#94A3B8; }
     .tv-col-head .sop b { display:block; font-family:'IBM Plex Mono',monospace; font-size:22px; color:#F1F5F9; }
     .tv-bar { display:flex; height:8px; border-radius:4px; overflow:hidden; background:#24324F; margin:10px 0; }
-    .tv-chips { display:grid; grid-template-columns:repeat(8,1fr); gap:4px; margin-bottom:8px; }
+    .tv-chips { display:grid; grid-template-columns:repeat(9,1fr); gap:4px; margin-bottom:8px; }
     .tv-chip { text-align:center; border-top:3px solid var(--sc); background:#0F1A31; border-radius:5px; padding:3px 0; }
     .tv-chip b { display:block; font-family:'IBM Plex Mono',monospace; font-size:18px; line-height:1.2; }
-    .tv-chip span { font-size:10px; color:#94A3B8; white-space:nowrap; }
+    .tv-chip span { font-size:9.5px; color:#94A3B8; white-space:nowrap; }
     .tv-chip.zero b { color:#3B4A6B; }
     .tv-item { display:flex; align-items:center; gap:10px; height:27px; border-bottom:1px solid #1B2944; }
     .tv-item .no { width:26px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:14px; color:#64748B; }
@@ -653,14 +653,15 @@ const PLAN_ITEMS = [
 const PLAN_MODELS = ['718W', '578W', 'D46H'];
 const MODEL_LABEL = { '718W': '718W', '578W': '578W', 'D46H': 'D46H' };
 
-// เรียงจากบนลงล่างในตาราง: Shipment อยู่บนสุด -> Pending อยู่ล่างสุด
+// เรียงจากบนลงล่างในตาราง: Shipment → SOP → QC OK → QC Check #2 → Re-trial → Big lot → QC Check #1 → Trial → Pending
 const PLAN_STATUS_TOP_DOWN = [
   { key: 'Shipment',   color: '#0F766E' },
   { key: 'SOP',        color: '#16A34A' },
   { key: 'QC OK',      color: '#22C55E' },
-  { key: 'QC Check',   color: '#EAB308' },
+  { key: 'QC Check #2', color: '#EAB308' },
   { key: 'Re-trial',   color: '#F97316' },
   { key: 'Big lot',    color: '#3B82F6' },
+  { key: 'QC Check #1', color: '#CA8A04' },
   { key: 'Trial',      color: '#8B5CF6' },
   { key: 'Pending',    color: '#94A3B8' }
 ];
@@ -674,8 +675,9 @@ let planUI = { tab: 'update', model: 'all', date: '', month: '', sel: {} };
 
 function todayStr() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
 function canEditPlan() { return PLAN_EDIT_ROLES.includes(getUserRole()); }
+function planNorm(list) { (list || []).forEach(e => { if (e.status === 'QC Check') e.status = 'QC Check #1'; }); return list; }
 function planLoadLocal() {
-  try { const r = localStorage.getItem('jig_plan_v1'); if (r) planState = JSON.parse(r); const q = localStorage.getItem('jig_plan_q_v1'); if (q) planQueue = JSON.parse(q); } catch (e) {}
+  try { const r = localStorage.getItem('jig_plan_v1'); if (r) { planState = JSON.parse(r); planNorm(planState.entries); } const q = localStorage.getItem('jig_plan_q_v1'); if (q) planQueue = JSON.parse(q); } catch (e) {}
 }
 function planSaveLocal() {
   localStorage.setItem('jig_plan_v1', JSON.stringify(planState));
@@ -707,7 +709,7 @@ async function planFetch() {
   try {
     const res = await fetch(GOOGLE_SCRIPT_URL + '?action=planLoad');
     const j = await res.json();
-    if (j.success && Array.isArray(j.entries)) { planState.entries = j.entries; planSyncOk = true; planSaveLocal(); }
+    if (j.success && Array.isArray(j.entries)) { planState.entries = planNorm(j.entries); planSyncOk = true; planSaveLocal(); }
     else planSyncOk = false;
   } catch (e) {}
 }
@@ -964,7 +966,7 @@ function renderOverviewTV() {
     const sop = counts['SOP'] + counts['Shipment']; planDone += sop;
     const pct = items.length ? Math.round(sop / items.length * 100) : 0;
     const bar = PLAN_STATUS_FLOW.filter(x => counts[x.key]).map(x => `<div style="width:${counts[x.key] / items.length * 100}%;background:${x.color}"></div>`).join('');
-    const chips = PLAN_STATUS_TOP_DOWN.map(x => `<div class="tv-chip ${counts[x.key] ? '' : 'zero'}" style="--sc:${x.color}"><b>${counts[x.key]}</b><span>${x.key}</span></div>`).join('');
+    const chips = PLAN_STATUS_TOP_DOWN.map(x => `<div class="tv-chip ${counts[x.key] ? '' : 'zero'}" style="--sc:${x.color}"><b>${counts[x.key]}</b><span>${x.key.replace('QC Check', 'QC')}</span></div>`).join('');
     const rank = it => { const c = cur(it); const i = PLAN_STATUS_TOP_DOWN.findIndex(x => x.key === (c ? c.status : 'Pending')); return i < 0 ? 99 : i; };
     // มี status ก้าวหน้าแล้วขึ้นบน: เรียง Shipment → SOP → ... → Pending (ในสถานะเดียวกันเรียงตามลำดับแผน)
     const sorted = items.slice().sort((x, y) => rank(x) - rank(y) || x.no - y.no);
