@@ -193,7 +193,7 @@
     .tv-item .no { width:26px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:14px; color:#64748B; }
     .tv-item .color { width:96px; font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:18px; }
     .tv-item .dots { display:flex; gap:2px; }
-    .tv-item .dots i { width:12px; height:8px; border-radius:2px; background:rgba(255,255,255,.12); }
+    .tv-item .dots i { width:30px; height:8px; border-radius:2px; background:rgba(255,255,255,.12); }
     .tv-item .pill { margin-left:auto; min-width:92px; text-align:center; padding:2px 10px; border-radius:11px; font-size:14px; font-weight:700; color:#fff; background:var(--sc); }
     .tv-item .dt { width:54px; text-align:right; font-family:'IBM Plex Mono',monospace; font-size:16px; color:#CBD5E1; }
     .tv-item .dt.none { color:#3B4A6B; }
@@ -666,6 +666,18 @@ const PLAN_STATUS_TOP_DOWN = [
   { key: 'Pending',    color: '#94A3B8' }
 ];
 const PLAN_STATUS_FLOW = [...PLAN_STATUS_TOP_DOWN].reverse(); // ลำดับขั้นตอนจริง ใช้ใน dropdown
+// ความคืบหน้าแบบ Progressive: แต่ละ Status มีค่าตามตำแหน่งในขั้นตอน (Pending 0% → Shipment 100%) แล้วเฉลี่ยทุกรายการ
+// Status ที่อยู่ "ขั้นเดียวกัน" ใช้ค่าความคืบหน้าเท่ากัน (ต่างกันแค่กำลังทำ/เสร็จแล้ว):
+//   Trial = Trial OK | Big lot = Re-trial (Big lot ไม่ผ่านแล้วทำซ้ำ) | Waiting QC Check = QC OK | SOP = Shipment (SOP แล้ว แค่รอส่งให้ครบ)
+const PLAN_STAGE = { 'Pending': 0, 'Trial': 1, 'Trial OK': 1, 'Big lot': 2, 'Re-trial': 2, 'Waiting QC Check': 3, 'QC OK': 3, 'SOP': 4, 'Shipment': 4 };
+const PLAN_STAGE_MAX = 4;
+const PLAN_IN_PROGRESS = ['Trial', 'Big lot', 'Re-trial', 'Waiting QC Check', 'SOP']; // ยังไม่เสร็จขั้นนั้น (แสดงจุดสีจางลง) — SOP = รอส่งให้ครบ
+function planWeight(st) { return (PLAN_STAGE[st] || 0) / PLAN_STAGE_MAX; }
+function planProgress(items) {
+  if (!items.length) return 0;
+  const sum = items.reduce((a, it) => { const c = planCurrent(it.no); return a + planWeight(c ? c.status : 'Pending'); }, 0);
+  return Math.round(sum / items.length * 100);
+}
 function statusColor(k) { return (PLAN_STATUS_TOP_DOWN.find(x => x.key === k) || {}).color || '#94A3B8'; }
 
 let planState = { entries: [] };   // { id, no, status, date:'YYYY-MM-DD', by, ts }
@@ -871,7 +883,7 @@ function planOverviewHtml() {
     items.forEach(it => { const c = planCurrent(it.no); counts[c ? c.status : 'Pending']++; });
     const total = items.length;
     const sopDone = counts['SOP'] + counts['Shipment'];
-    const pct = total ? Math.round(sopDone / total * 100) : 0;
+    const pct = planProgress(items);
     const bar = PLAN_STATUS_FLOW.filter(x => counts[x.key] > 0).map(x => `<div title="${x.key}: ${counts[x.key]}" style="width:${counts[x.key] / total * 100}%;background:${x.color};"></div>`).join('');
     return { counts, total, sopDone, pct, bar };
   };
@@ -884,7 +896,7 @@ function planOverviewHtml() {
       <div style="display:flex; justify-content:space-between; align-items:center;">
         <div style="font-family:Oswald; font-size:22px; font-weight:700; color:var(--mc); border-bottom:2px solid var(--mc); display:inline-block;" class="m-${m}">${MODEL_LABEL[m]}</div>
         <div style="display:flex; align-items:center; gap:10px;">
-          <div style="text-align:right; font-size:10px; color:var(--ink-soft); text-transform:uppercase;">SOP แล้ว<br><b style="font-family:'IBM Plex Mono'; font-size:14px; color:var(--ink);">${c.sopDone} / ${c.total}</b></div>
+          <div style="text-align:right; font-size:10px; color:var(--ink-soft); text-transform:uppercase;">ความคืบหน้ารวม · SOP แล้ว<br><b style="font-family:'IBM Plex Mono'; font-size:14px; color:var(--ink);">${c.sopDone} / ${c.total}</b></div>
           ${progressRingHtml(c.pct, { size: 56, stroke: 6, color: '#0F766E' })}
         </div>
       </div>
@@ -900,7 +912,7 @@ function planOverviewHtml() {
       <div style="display:flex; align-items:center; gap:20px;">
         ${progressRingHtml(all.pct, { size: 80, stroke: 8, color: '#5EEAD4', track: 'rgba(255,255,255,0.15)' })}
         <div style="flex:1;">
-          <div style="font-size:13px; color:#CBD5E1;">SOP แล้ว (SOP + Shipment)</div>
+          <div style="font-size:13px; color:#CBD5E1;">ความคืบหน้ารวม (Progressive) · SOP แล้ว (SOP + Shipment)</div>
           <div style="font-family:'IBM Plex Mono'; font-size:26px; font-weight:700;">${all.sopDone} <span style="font-size:14px; color:#94A3B8;">/ ${all.total} รายการ</span></div>
           <div style="display:flex; height:10px; border-radius:5px; overflow:hidden; background:rgba(255,255,255,0.2); margin-top:8px;">${all.bar}</div>
         </div>
@@ -966,7 +978,7 @@ function renderOverviewTV() {
     const counts = {}; PLAN_STATUS_TOP_DOWN.forEach(x => counts[x.key] = 0);
     items.forEach(it => { const c = cur(it); counts[c ? c.status : 'Pending']++; });
     const sop = counts['SOP'] + counts['Shipment']; planDone += sop;
-    const pct = items.length ? Math.round(sop / items.length * 100) : 0;
+    const pct = planProgress(items);
     const bar = PLAN_STATUS_FLOW.filter(x => counts[x.key]).map(x => `<div style="width:${counts[x.key] / items.length * 100}%;background:${x.color}"></div>`).join('');
     const chips = PLAN_STATUS_TOP_DOWN.map(x => `<div class="tv-chip ${counts[x.key] ? '' : 'zero'}" style="--sc:${x.color}"><b>${counts[x.key]}</b><span>${CHIP_LABEL[x.key] || x.key}</span></div>`).join('');
     const rank = it => { const c = cur(it); const i = PLAN_STATUS_TOP_DOWN.findIndex(x => x.key === (c ? c.status : 'Pending')); return i < 0 ? 99 : i; };
@@ -974,18 +986,18 @@ function renderOverviewTV() {
     const sorted = items.slice().sort((x, y) => rank(x) - rank(y) || x.no - y.no);
     const rows = sorted.map(it => {
       const c = cur(it), st = c ? c.status : 'Pending';
-      const idx = PLAN_STATUS_FLOW.findIndex(x => x.key === st), col = statusColor(st);
-      const dots = PLAN_STATUS_FLOW.map((x, i) => `<i style="${i <= idx ? 'background:' + col : ''}"></i>`).join('');
+      const col = statusColor(st), stage = PLAN_STAGE[st] || 0, half = PLAN_IN_PROGRESS.includes(st);
+      const dots = Array.from({ length: PLAN_STAGE_MAX }, (_, i) => `<i style="${i < stage ? 'background:' + col + (half && i === stage - 1 ? ';opacity:.55' : '') : ''}"></i>`).join('');
       return `<div class="tv-item"><span class="color">${escapeHtml(it.color)}</span><span class="dots">${dots}</span>
         <span class="pill" style="--sc:${col}">${st}</span>
         <span class="dt ${c ? '' : 'none'}">${c ? c.date.slice(8) + '/' + c.date.slice(5, 7) : '—'}</span></div>`;
     }).join('');
     return `<div class="tv-col m-${m}">
       <div class="tv-col-head"><div class="t">${MODEL_LABEL[m]}</div>
-        <div style="display:flex;align-items:center;gap:12px;"><div class="sop">SOP แล้ว<b>${sop} / ${items.length}</b></div>${staticRing(pct, 54, 6, '#2DD4BF')}</div></div>
+        <div style="display:flex;align-items:center;gap:12px;"><div class="sop">ความคืบหน้ารวม · SOP แล้ว<b>${sop} / ${items.length}</b></div>${staticRing(pct, 56, 6, '#2DD4BF')}</div></div>
       <div class="tv-bar">${bar}</div><div class="tv-chips">${chips}</div>${rows}</div>`;
   }).join('');
-  const planPct = Math.round(planDone / PLAN_ITEMS.length * 100);
+  const planPct = planProgress(PLAN_ITEMS);
 
   const kpi = (l, v, color) => `<div class="tv-kpi"><div class="l">${l}</div><div class="v" ${color ? `style="color:${color}"` : ''}>${v}</div></div>`;
   document.getElementById('app').innerHTML = `
@@ -1003,7 +1015,7 @@ function renderOverviewTV() {
         ${kpi('ซ่อมเสร็จแล้ว', allDone, '#34D399')}
         ${kpi('ค้างซ่อม (PE)', allSent - allDone, '#F87171')}
         <div class="tv-kpi"><div class="l">% สำเร็จ<br>เทียบ Stock</div>${staticRing(allPctStock, 64, 7, '#60A5FA')}</div>
-        <div class="tv-kpi"><div class="l">แผน SOP แล้ว<br><b style="font-family:'IBM Plex Mono';font-size:20px;color:#F1F5F9;">${planDone} / ${PLAN_ITEMS.length}</b></div>${staticRing(planPct, 64, 7, '#2DD4BF')}</div>
+        <div class="tv-kpi"><div class="l">ความคืบหน้าแผนรวม<br>SOP แล้ว <b style="font-family:'IBM Plex Mono';font-size:20px;color:#F1F5F9;">${planDone} / ${PLAN_ITEMS.length}</b></div>${staticRing(planPct, 64, 7, '#2DD4BF')}</div>
         <div class="tv-kpi" style="${oldest ? 'border-color:#7F1D1D;' : ''}"><div class="l">ค้างนานสุด</div><div style="text-align:right;font-weight:700;font-size:18px;">${oldest ? escapeHtml(oldestKey) + '<br>' + agingBadge(oldest) : '—'}</div></div>
       </div>
       <div><div class="tv-sec">แผนการผลิต · STATUS &amp; วันที่ (แต่ละรุ่น)</div><div class="tv-plan">${planCols}</div></div>
