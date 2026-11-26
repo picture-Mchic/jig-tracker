@@ -653,15 +653,15 @@ const PLAN_ITEMS = [
 const PLAN_MODELS = ['718W', '578W', 'D46H'];
 const MODEL_LABEL = { '718W': '718W', '578W': '578W', 'D46H': 'D46H' };
 
-// เรียงจากบนลงล่างในตาราง: Shipment → SOP → QC OK → QC Check #2 → Re-trial → Big lot → QC Check #1 → Trial → Pending
+// เรียงจากบนลงล่างในตาราง: Shipment → SOP → QC OK → Waiting QC Check → Re-trial → Big lot → Trial OK → Trial → Pending
 const PLAN_STATUS_TOP_DOWN = [
   { key: 'Shipment',   color: '#0F766E' },
   { key: 'SOP',        color: '#16A34A' },
   { key: 'QC OK',      color: '#22C55E' },
-  { key: 'QC Check #2', color: '#EAB308' },
+  { key: 'Waiting QC Check', color: '#EAB308' },
   { key: 'Re-trial',   color: '#F97316' },
   { key: 'Big lot',    color: '#3B82F6' },
-  { key: 'QC Check #1', color: '#CA8A04' },
+  { key: 'Trial OK',   color: '#65A30D' },
   { key: 'Trial',      color: '#8B5CF6' },
   { key: 'Pending',    color: '#94A3B8' }
 ];
@@ -675,7 +675,9 @@ let planUI = { tab: 'update', model: 'all', date: '', month: '', sel: {} };
 
 function todayStr() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
 function canEditPlan() { return PLAN_EDIT_ROLES.includes(getUserRole()); }
-function planNorm(list) { (list || []).forEach(e => { if (e.status === 'QC Check') e.status = 'QC Check #1'; }); return list; }
+const PLAN_STATUS_RENAME = { 'QC Check': 'Waiting QC Check', 'QC Check #2': 'Waiting QC Check', 'QC Check #1': 'Trial OK' };
+function planNorm(list) { (list || []).forEach(e => { if (PLAN_STATUS_RENAME[e.status]) e.status = PLAN_STATUS_RENAME[e.status]; }); return list; }
+const CHIP_LABEL = { 'Waiting QC Check': 'Wait QC' };
 function planLoadLocal() {
   try { const r = localStorage.getItem('jig_plan_v1'); if (r) { planState = JSON.parse(r); planNorm(planState.entries); } const q = localStorage.getItem('jig_plan_q_v1'); if (q) planQueue = JSON.parse(q); } catch (e) {}
 }
@@ -966,7 +968,7 @@ function renderOverviewTV() {
     const sop = counts['SOP'] + counts['Shipment']; planDone += sop;
     const pct = items.length ? Math.round(sop / items.length * 100) : 0;
     const bar = PLAN_STATUS_FLOW.filter(x => counts[x.key]).map(x => `<div style="width:${counts[x.key] / items.length * 100}%;background:${x.color}"></div>`).join('');
-    const chips = PLAN_STATUS_TOP_DOWN.map(x => `<div class="tv-chip ${counts[x.key] ? '' : 'zero'}" style="--sc:${x.color}"><b>${counts[x.key]}</b><span>${x.key.replace('QC Check', 'QC')}</span></div>`).join('');
+    const chips = PLAN_STATUS_TOP_DOWN.map(x => `<div class="tv-chip ${counts[x.key] ? '' : 'zero'}" style="--sc:${x.color}"><b>${counts[x.key]}</b><span>${CHIP_LABEL[x.key] || x.key}</span></div>`).join('');
     const rank = it => { const c = cur(it); const i = PLAN_STATUS_TOP_DOWN.findIndex(x => x.key === (c ? c.status : 'Pending')); return i < 0 ? 99 : i; };
     // มี status ก้าวหน้าแล้วขึ้นบน: เรียง Shipment → SOP → ... → Pending (ในสถานะเดียวกันเรียงตามลำดับแผน)
     const sorted = items.slice().sort((x, y) => rank(x) - rank(y) || x.no - y.no);
